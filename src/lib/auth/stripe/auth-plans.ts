@@ -1,4 +1,5 @@
 import type { Subscription } from "@/generated/prisma";
+import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import {
   Clock,
@@ -77,8 +78,8 @@ export const AUTH_PLANS: AppAuthPlan[] = [
     name: "pro",
     isPopular: true,
     description: "Ideal for growing teams with advanced collaboration needs",
-    priceId: process.env.STRIPE_PRO_PLAN_ID ?? "",
-    annualDiscountPriceId: process.env.STRIPE_PRO_YEARLY_PLAN_ID ?? "",
+    priceId: env.STRIPE_PRO_PRICE_ID ?? "",
+    annualDiscountPriceId: env.STRIPE_PRO_PRICE_ID ?? "", // Using same for now, add STRIPE_PRO_YEARLY_PRICE_ID if needed
     limits: {
       projects: 20,
       storage: 50,
@@ -109,8 +110,8 @@ export const AUTH_PLANS: AppAuthPlan[] = [
     isPopular: false,
     description:
       "Enterprise-grade solution for large teams with complex requirements",
-    priceId: process.env.STRIPE_ULTRA_PLAN_ID ?? "",
-    annualDiscountPriceId: process.env.STRIPE_ULTRA_YEARLY_PLAN_ID ?? "",
+    priceId: env.STRIPE_ULTRA_PRICE_ID ?? "",
+    annualDiscountPriceId: env.STRIPE_ULTRA_PRICE_ID ?? "", // Using same for now
     limits: {
       projects: 100,
       storage: 1000,

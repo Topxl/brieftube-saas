@@ -8,6 +8,7 @@ FEATURE: Add console email adapter for development (shows verification links in 
 FIX: Email verification bug - links now shown in console during development when Resend is not configured
 FIX: Disable mandatory email verification on signup (users can now login immediately without verifying email)
 FIX: Add proper error handling and logging in billing actions to prevent JSON parse errors
+FIX: Update Stripe price ID configuration to use STRIPE_PRO_PRICE_ID instead of STRIPE_PRO_PLAN_ID
 CHORE: Add psutil dependency for system monitoring
 FEATURE: Add dynamic favicon generation using Next.js ImageResponse API matching site logo
 REFACTOR: Rename project from "Boilerplate" to "BriefTube" across all configuration files
