@@ -15,7 +15,10 @@ FIX: Update GitHub Actions workflows to make Stripe/Resend secrets optional and 
 FIX: Make Resend client initialization conditional to handle missing API keys during builds
 FIX: Make Supabase client return null during CI builds when environment variables are missing
 FIX: Fix generateStaticParams in posts page to return demo fallback for empty posts array
+FIX: Fix generateStaticParams in docs and changelog pages with proper error handling
 CHORE: Add svix package for Resend webhook signature verification
+CHORE: Add content directory (posts, docs, changelog) to repository for proper builds
+FEATURE: Enable manual workflow dispatch trigger for GitHub Actions
 
 ## 2026-02-17
 
