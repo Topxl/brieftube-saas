@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
 import { logger } from "@/lib/logger";
+import { upgradeOrgAction } from "@/features/plans/plans.action";
+import { resolveActionResult } from "@/lib/actions/actions-utils";
 
 interface PriceData {
   amount: number;
@@ -57,15 +59,17 @@ export default function BillingPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/stripe/checkout", { method: "POST" });
-      const data = await res.json();
+      const result = await resolveActionResult(
+        upgradeOrgAction({
+          plan: "pro",
+          annual: false,
+          successUrl: "/dashboard/billing",
+          cancelUrl: "/dashboard/billing",
+        }),
+      );
 
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to create checkout session");
-      }
-
-      if (data.url) {
-        window.location.href = data.url;
+      if (result.url) {
+        window.location.href = result.url;
       } else {
         throw new Error("No checkout URL received");
       }
@@ -82,18 +86,8 @@ export default function BillingPage() {
     setManagingLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/stripe/portal", { method: "POST" });
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to open customer portal");
-      }
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error("No portal URL received");
-      }
+      // For now, redirect to the proper billing page
+      window.location.href = "/orgs/settings/billing";
     } catch (err) {
       const error = err as Error;
       logger.error("Portal error:", error);
