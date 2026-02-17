@@ -2,6 +2,9 @@
 
 ## 2026-02-18
 
+FEATURE: Add Telegram monitoring system for worker with real-time alerts and admin commands (/monitor_status, /monitor_stats, /monitor_logs)
+FEATURE: Add worker management scripts (start.sh, stop.sh, restart.sh)
+CHORE: Add psutil dependency for system monitoring
 FEATURE: Add dynamic favicon generation using Next.js ImageResponse API matching site logo
 REFACTOR: Rename project from "Boilerplate" to "BriefTube" across all configuration files
 CHORE: Remove obsolete integration documentation (README-INTEGRATION.md, INTEGRATION-ANALYSIS.md, INTEGRATION-SUMMARY.md, integrate-brieftube.sh)

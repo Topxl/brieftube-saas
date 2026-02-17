@@ -13,8 +13,9 @@ from telegram.ext import (
     filters,
 )
 
-from config import TELEGRAM_BOT_TOKEN
+from config import TELEGRAM_BOT_TOKEN, ADMIN_TELEGRAM_CHAT_ID
 import db
+from monitoring import stats, get_system_info, get_log_tail
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +119,127 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "Your Telegram is not connected to any BriefTube account.\n\n"
             "Go to https://brief-tube.com > Settings to connect."
         )
+
+
+# ── Admin Monitoring Commands ─────────────────────────────────────
+
+def _is_admin(chat_id: str) -> bool:
+    """Check if chat_id is admin."""
+    return ADMIN_TELEGRAM_CHAT_ID and chat_id == str(ADMIN_TELEGRAM_CHAT_ID)
+
+
+async def monitor_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /monitor_status command (admin only)."""
+    chat_id = str(update.effective_chat.id)
+
+    if not _is_admin(chat_id):
+        await update.message.reply_text("⛔ Admin only command")
+        return
+
+    summary = stats.get_summary()
+    system = get_system_info()
+
+    status_msg = f"""🔍 **Worker Status**
+
+⏱️ **Uptime:** {summary['uptime']}
+📅 **Started:** {summary['start_time'][:16]}
+
+📊 **Statistics:**
+• Videos processed: {summary['videos_processed']}
+• Videos failed: {summary['videos_failed']}
+• Success rate: {_calc_success_rate(summary)}%
+
+📡 **RSS Scanner:**
+• Scans completed: {summary['rss_scans']}
+• New videos found: {summary['new_videos_found']}
+
+📤 **Deliveries:**
+• Sent: {summary['deliveries_sent']}
+• Failed: {summary['deliveries_failed']}
+
+⚡ **Performance:**
+• Avg processing: {summary['avg_processing_time']}s
+• Last video: {summary['last_video_time'][:16] if summary['last_video_time'] else 'N/A'}
+
+💻 **System:**
+• CPU: {system.get('cpu_percent', 'N/A')}%
+• Memory: {system.get('memory_percent', 'N/A')}% ({system.get('memory_used_mb', 'N/A')} MB)
+• Disk: {system.get('disk_free_gb', 'N/A')} GB free
+"""
+
+    await update.message.reply_text(status_msg, parse_mode="Markdown")
+
+
+async def monitor_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /monitor_stats command (admin only)."""
+    chat_id = str(update.effective_chat.id)
+
+    if not _is_admin(chat_id):
+        await update.message.reply_text("⛔ Admin only command")
+        return
+
+    summary = stats.get_summary()
+
+    # Build error breakdown
+    error_breakdown = "\n".join(
+        f"• {error_type}: {count}"
+        for error_type, count in summary['errors_by_type'].items()
+    ) or "None"
+
+    stats_msg = f"""📈 **Detailed Statistics**
+
+**Processing Stats:**
+• Total processed: {summary['videos_processed']}
+• Total failed: {summary['videos_failed']}
+• Success rate: {_calc_success_rate(summary)}%
+• Avg time: {summary['avg_processing_time']}s
+
+**Error Breakdown:**
+{error_breakdown}
+
+**Recent Errors:**
+"""
+
+    # Add recent errors
+    if summary['recent_errors']:
+        for err in summary['recent_errors'][-5:]:
+            time_str = err['time'][11:16]  # HH:MM
+            msg = err['message'][:80]  # Truncate long messages
+            stats_msg += f"\n`{time_str}` {msg}"
+    else:
+        stats_msg += "\nNo recent errors ✅"
+
+    await update.message.reply_text(stats_msg, parse_mode="Markdown")
+
+
+async def monitor_logs_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /monitor_logs command (admin only)."""
+    chat_id = str(update.effective_chat.id)
+
+    if not _is_admin(chat_id):
+        await update.message.reply_text("⛔ Admin only command")
+        return
+
+    # Get number of lines (default 30)
+    lines = 30
+    if context.args and context.args[0].isdigit():
+        lines = min(int(context.args[0]), 100)
+
+    logs = get_log_tail(lines)
+
+    # Telegram message limit is 4096 chars
+    if len(logs) > 3900:
+        logs = logs[-3900:]
+
+    await update.message.reply_text(f"```\n{logs}\n```", parse_mode="Markdown")
+
+
+def _calc_success_rate(summary: dict) -> int:
+    """Calculate success rate percentage."""
+    total = summary['videos_processed'] + summary['videos_failed']
+    if total == 0:
+        return 100
+    return round((summary['videos_processed'] / total) * 100)
 
 
 # ── Helper: get profile from chat_id ──────────────────────────
@@ -419,9 +541,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 def create_bot_application() -> Application:
     """Create the Telegram bot application with command handlers."""
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+
+    # User commands
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("status", status_command))
+
+    # Admin monitoring commands
+    app.add_handler(CommandHandler("monitor_status", monitor_status_command))
+    app.add_handler(CommandHandler("monitor_stats", monitor_stats_command))
+    app.add_handler(CommandHandler("monitor_logs", monitor_logs_command))
+
     # Message handler LAST — catches non-command text messages
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     return app
