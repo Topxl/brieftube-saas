@@ -16,6 +16,8 @@ on:
       - "app/**"
       - "prisma/**"
       - "e2e/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
 
 # Cancel previous runs on the same PR/branch
 concurrency:
