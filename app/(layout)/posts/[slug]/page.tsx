@@ -42,15 +42,22 @@ export async function generateMetadata(props: PostParams): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  const posts = await getPosts();
+  try {
+    const posts = await getPosts();
 
-  if (posts.length === 0) {
-    return [{ slug: "_placeholder" }];
+    // Next.js 16 requires at least one result with Cache Components
+    // Use first post or fallback to a known post slug
+    if (posts.length === 0) {
+      return [{ slug: "demo" }];
+    }
+
+    return posts.map((post) => ({
+      slug: post.slug,
+    }));
+  } catch {
+    // Fallback during build errors
+    return [{ slug: "demo" }];
   }
-
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
 }
 
 export default async function RoutePage(props: PostParams) {
