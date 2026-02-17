@@ -1,12 +1,13 @@
 export const SiteConfig = {
-  title: "Boilerplate",
-  description: "Production-ready Next.js SaaS boilerplate with multi-tenant organizations",
-  prodUrl: "https://demo.boilerplate.app",
-  appId: "boilerplate",
-  domain: "demo.boilerplate.app",
+  title: "BriefTube",
+  description:
+    "YouTube videos, summarized as audio, delivered to your Telegram",
+  prodUrl: "https://brieftube.app",
+  appId: "brieftube",
+  domain: "brieftube.app",
   appIcon: "/images/icon.png",
   company: {
-    name: "Boilerplate LLC",
+    name: "BriefTube",
     address: "421 Rue de Paris, France", // Remove if not needed
   },
   brand: {

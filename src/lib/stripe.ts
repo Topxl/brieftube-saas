@@ -1,6 +1,19 @@
 import Stripe from "stripe";
 import { env } from "./env";
 
-export const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  typescript: true,
-});
+const stripeInstance = env.STRIPE_SECRET_KEY
+  ? new Stripe(env.STRIPE_SECRET_KEY, {
+      typescript: true,
+    })
+  : null;
+
+export const stripe = stripeInstance as Stripe;
+
+export function getStripe(): Stripe {
+  if (!stripeInstance) {
+    throw new Error(
+      "Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.",
+    );
+  }
+  return stripeInstance;
+}

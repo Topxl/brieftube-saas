@@ -1,10 +1,11 @@
-#!/bin/sh
 echo "🔍 Running pre-commit checks..."
 
-echo "📝 TypeScript checking..."
+# Run TypeScript type check
+echo "📝 TypeScript check..."
 pnpm ts || exit 1
 
-echo "🎨 Linting staged files..."
-git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx)$' | xargs -r pnpm eslint --max-warnings 0 --no-warn-ignored || exit 1
+# Run ESLint
+echo "🔨 ESLint check..."
+pnpm lint || exit 1
 
-echo "✅ All checks passed! Proceeding with commit..."
+echo "✅ All checks passed!"

@@ -154,6 +154,10 @@ export default [
       "src/generated",
       ".claude",
       ".conductor",
+      "worker/**",
+      "**/venv/**",
+      "**/*.pyc",
+      "**/__pycache__/**",
     ],
   },
 ];

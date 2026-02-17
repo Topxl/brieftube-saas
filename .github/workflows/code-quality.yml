@@ -36,7 +36,7 @@ jobs:
         run: pnpm install
         env:
           CI: true
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/nowts_test"
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/brieftube_test"
       - name: Test
         run: |
           pnpm test:ci
@@ -70,7 +70,7 @@ jobs:
         run: pnpm install
         env:
           CI: true
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/nowts_test"
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/brieftube_test"
       - name: Run linter
         run: pnpm lint:ci
         env:
@@ -103,7 +103,7 @@ jobs:
         run: pnpm install
         env:
           CI: true
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/nowts_test"
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/brieftube_test"
       - name: Run TypeScript check
         run: pnpm ts
         env:

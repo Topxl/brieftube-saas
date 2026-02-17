@@ -1,8 +1,20 @@
 # Changelog
 
+## 2026-02-18
+
+FEATURE: Add dynamic favicon generation using Next.js ImageResponse API matching site logo
+REFACTOR: Rename project from "Boilerplate" to "BriefTube" across all configuration files
+CHORE: Remove obsolete integration documentation (README-INTEGRATION.md, INTEGRATION-ANALYSIS.md, INTEGRATION-SUMMARY.md, integrate-brieftube.sh)
+REFACTOR: Update init-project skill documentation to use "template" instead of "boilerplate"
+FIX: Fix worker SSL certificate error by restarting from correct project location
+FIX: Make Stripe and email environment variables optional to allow builds without payment/email configuration
+FIX: Update stripe.ts to handle optional STRIPE_SECRET_KEY with proper type casting
+FIX: Configure pre-commit hook with TypeScript and ESLint checks to prevent build failures
+FIX: Update ESLint configuration to ignore worker/ directory and Python virtual environment files
+
 ## 2026-02-17
 
-CHORE: Complete cleanup for public repo - removed boilerplate docs, AI configs, and 33 unnecessary files
+CHORE: Complete cleanup for public repo - removed template docs, AI configs, and 33 unnecessary files
 SECURITY: Remove sensitive files from Git tracking - 21,265 files removed (browser cookies, session data, IDE configs, logs)
 CHORE: Update .gitignore to prevent committing worker/cookies/, .cursor/, worker/*.log, and local settings
 FEATURE: Add pre-commit hook with Husky to run TypeScript check and lint on staged files before each commit
@@ -20,7 +32,7 @@ FIX: Remove prisma migrate deploy from vercel-build to prevent deployment failur
 
 ## 2026-02-15
 
-REFACTOR: Rename project from "NOW.TS" to "Boilerplate" across all configuration files (package.json, site-config.ts, README.md, CLAUDE.md)
+REFACTOR: Rename project from "NOW.TS" to "BriefTube" template base across all configuration files (package.json, site-config.ts, README.md, CLAUDE.md)
 
 ## 2026-01-19
 

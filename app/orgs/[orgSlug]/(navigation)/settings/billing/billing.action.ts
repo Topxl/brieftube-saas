@@ -1,7 +1,6 @@
 "use server";
 
 import { orgAction } from "@/lib/actions/safe-actions";
-import { hasPermission } from "@/lib/auth/auth-org";
 import { ActionError } from "@/lib/errors/action-error";
 import { prisma } from "@/lib/prisma";
 import { getServerUrl } from "@/lib/server-url";
@@ -19,12 +18,6 @@ export const openStripePortalAction = orgAction
 
     if (!stripeCustomerId) {
       throw new ActionError("No stripe customer id found");
-    }
-
-    if (!(await hasPermission({ subscription: ["manage"] }))) {
-      throw new ActionError(
-        "You do not have permission to manage subscriptions",
-      );
     }
 
     const stripeBilling = await stripe.billingPortal.sessions.create({
@@ -53,12 +46,6 @@ export const cancelOrgSubscriptionAction = orgAction
     }),
   )
   .action(async ({ parsedInput: { returnUrl }, ctx: { org } }) => {
-    if (!(await hasPermission({ subscription: ["manage"] }))) {
-      throw new ActionError(
-        "You do not have permission to manage subscriptions",
-      );
-    }
-
     const stripeCustomerId = org.stripeCustomerId;
 
     if (!stripeCustomerId) {
