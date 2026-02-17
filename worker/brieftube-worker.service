@@ -1,0 +1,17 @@
+[Unit]
+Description=BriefTube SaaS Worker (Telegram Bot + Video Processor)
+After=network.target
+
+[Service]
+Type=simple
+User=vj
+WorkingDirectory=/home/vj/Bureau/BriefTube/worker
+ExecStart=/home/vj/Bureau/BriefTube/worker/venv/bin/python main.py
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=append:/home/vj/Bureau/BriefTube/worker/worker.log
+StandardError=append:/home/vj/Bureau/BriefTube/worker/worker.log
+
+[Install]
+WantedBy=multi-user.target

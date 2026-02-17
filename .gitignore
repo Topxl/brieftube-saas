@@ -1,0 +1,74 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+
+
+# typescript
+*.tsbuildinfo
+
+.env
+
+/test-results
+.vercel
+
+src/generated
+
+# CI artifacts
+/ci-artifacts
+
+.playwright-mcp
+
+# Python
+worker/__pycache__/
+worker/venv/
+worker/*.log
+
+# Worker temporary files
+worker/audio/*.mp3
+worker/cookies/
+worker/.env
+worker/*.json
+!worker/.env.example
+
+# Local settings and AI agent configurations
+.claude/
+_bmad/
+
+# IDE configuration (local)
+.cursor/
+
+# Package lock (using pnpm)
+package-lock.json
+
+# Documentation and config files (not needed in public repo)
+AGENTS.md
+CLAUDE.md
+conductor.json
+start-tunnel.sh
+content/
+docs/

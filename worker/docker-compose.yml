@@ -1,0 +1,13 @@
+services:
+  worker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./cookies:/app/cookies
+      - ./audio:/app/audio
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,0 +1,77 @@
+"use client";
+
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
+
+const steps = [
+  {
+    number: "1",
+    title: "Subscribe to channels",
+    description:
+      "Add your favorite YouTube channels from the dashboard. Paste URLs or channel IDs.",
+    icon: (
+      <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+    ),
+  },
+  {
+    number: "2",
+    title: "AI summarizes each video",
+    description:
+      "When a new video drops, our AI watches it and generates a detailed summary in seconds.",
+    icon: (
+      <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+      </svg>
+    ),
+  },
+  {
+    number: "3",
+    title: "Listen on Telegram",
+    description:
+      "Receive natural-sounding audio summaries directly in your Telegram. Listen anywhere.",
+    icon: (
+      <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+      </svg>
+    ),
+  },
+];
+
+export function HowItWorks() {
+  return (
+    <section id="how-it-works" className="py-20">
+      <div className="mx-auto max-w-6xl px-6">
+        <ScrollReveal>
+          <h2 className="font-display text-center text-2xl font-bold md:text-3xl">
+            How it works
+          </h2>
+          <p className="mt-3 text-center text-muted-foreground">
+            Three steps. Two minutes. Zero effort after that.
+          </p>
+        </ScrollReveal>
+
+        <ScrollReveal delay={150}>
+          <div className="mt-16 grid gap-12 md:grid-cols-3">
+            {steps.map((step, i) => (
+              <div key={step.number} className="relative text-center">
+                {/* Connection line between steps (hidden on mobile) */}
+                {i < steps.length - 1 && (
+                  <div className="absolute top-8 left-[calc(50%+40px)] hidden h-px w-[calc(100%-80px)] bg-gradient-to-r from-white/[0.1] to-white/[0.04] md:block" />
+                )}
+                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/[0.06] backdrop-blur-sm border border-white/[0.1] text-red-500 shadow-[0_4px_16px_rgba(0,0,0,0.2)]">
+                  {step.icon}
+                </div>
+                <div className="mb-2 text-sm font-semibold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
+                  Step {step.number}
+                </div>
+                <h3 className="mb-3 text-lg font-semibold">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
