@@ -70,5 +70,5 @@ AGENTS.md
 CLAUDE.md
 conductor.json
 start-tunnel.sh
-content/
+# content/ - Now tracked for posts, docs, and changelog
 docs/
