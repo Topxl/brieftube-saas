@@ -46,15 +46,21 @@ export async function generateMetadata(
 }
 
 export async function generateStaticParams() {
-  const changelogs = await getChangelogs();
+  try {
+    const changelogs = await getChangelogs();
 
-  if (changelogs.length === 0) {
-    return [{ slug: "_placeholder" }];
+    // Next.js 16 requires at least one valid result
+    if (changelogs.length === 0) {
+      return [{ slug: "2025-12-15-v200" }];
+    }
+
+    return changelogs.map((changelog) => ({
+      slug: changelog.slug,
+    }));
+  } catch {
+    // Fallback to first known changelog
+    return [{ slug: "2025-12-15-v200" }];
   }
-
-  return changelogs.map((changelog) => ({
-    slug: changelog.slug,
-  }));
 }
 
 export default async function ChangelogDetailPage(props: ChangelogParams) {

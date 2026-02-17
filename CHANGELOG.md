@@ -12,6 +12,10 @@ FIX: Update stripe.ts to handle optional STRIPE_SECRET_KEY with proper type cast
 FIX: Configure pre-commit hook with TypeScript and ESLint checks to prevent build failures
 FIX: Update ESLint configuration to ignore worker/ directory and Python virtual environment files
 FIX: Update GitHub Actions workflows to make Stripe/Resend secrets optional and rename database to brieftube_test
+FIX: Make Resend client initialization conditional to handle missing API keys during builds
+FIX: Make Supabase client return null during CI builds when environment variables are missing
+FIX: Fix generateStaticParams in posts page to return demo fallback for empty posts array
+CHORE: Add svix package for Resend webhook signature verification
 
 ## 2026-02-17
 

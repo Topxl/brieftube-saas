@@ -1,11 +1,14 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+status: 'complete'
+lastStep: 14
 inputDocuments:
   - '/home/vj/Bureau/Projets/BriefTube/_bmad-output/planning-artifacts/product-brief-BriefTube-2026-02-17.md'
   - '/home/vj/Bureau/Projets/BriefTube/_bmad-output/project-context.md'
 project_name: 'BriefTube'
 author: 'vin'
 date: '2026-02-18'
+completedDate: '2026-02-18'
 ---
 
 # UX Design Specification BriefTube
@@ -1478,6 +1481,129 @@ graph TD
 **Full-Screen Modals:**
 - **Usage:** Flows complexes (onboarding, settings)
 - **Behavior:** Can navigate within, clear exit
+
+---
+
+## Responsive Design & Accessibility
+
+### Responsive Strategy
+
+**Approche: Mobile-First (Primary Device)**
+
+**Rationale:**
+- Primary consumption est sur mobile (Telegram)
+- Dashboard web principalement utilisé pour setup (peut être desktop ou mobile)
+- TailwindCSS supporte mobile-first nativement
+
+**Strategy par Device:**
+
+**Mobile (320px - 767px) - PRIORITY**
+- **Layout:** Single column, stacked
+- **Navigation:** Hamburger menu ou bottom nav
+- **Touch Targets:** 44x44px minimum
+- **Content:** Simplifié, priorité au essentiel
+- **Actions:** Full-width buttons pour faciliter tap
+
+**Tablet (768px - 1023px)**
+- **Layout:** 2 colonnes où approprié (dashboard stats grid)
+- **Navigation:** Peut montrer plus d'options
+- **Density:** Information density modérée
+- **Actions:** Inline buttons acceptable
+
+**Desktop (1024px+)**
+- **Layout:** Multi-colonnes, max-width containers (éviter full-width)
+- **Navigation:** Sidebar optionnelle ou top nav
+- **Density:** Plus d'informations visibles simultanément
+- **White Space:** Marges latérales généreuses
+
+**Adaptive Components:**
+- **ChannelCard:** Compact liste (mobile) → Expanded avec plus d'info (desktop)
+- **Stats:** Grid 1-col (mobile) → 3-col (desktop)
+- **Navigation:** Bottom nav (mobile) → Top nav (desktop)
+- **Forms:** Full-width (mobile) → Max-width centered (desktop)
+
+---
+
+### Breakpoint Strategy
+
+**TailwindCSS Breakpoints (Standard):**
+
+```css
+/* Mobile-first approach */
+sm: 640px   /* Tablet portrait */
+md: 768px   /* Tablet landscape */
+lg: 1024px  /* Desktop */
+xl: 1280px  /* Large desktop */
+2xl: 1536px /* Extra large */
+```
+
+**BriefTube Usage:**
+- **Default (< 640px):** Mobile layout
+- **sm (640px+):** Tablet adjustments
+- **md (768px+):** Desktop multi-column
+- **lg (1024px+):** Full desktop experience
+- **xl/2xl:** Max-width containers, pas de changements majeurs
+
+---
+
+### Accessibility Strategy
+
+**Compliance Target: WCAG AA (Industry Standard)**
+
+**Accessibility Requirements:**
+
+**1. Perceivable**
+- Color contrast: 4.5:1 minimum pour texte
+- Alternative text pour toutes images/icons
+- Layouts fonctionnent à 200% zoom
+
+**2. Operable**
+- Keyboard navigation complète
+- Touch targets: 44x44px minimum
+- Focus indicators visibles
+- Pas de keyboard traps
+
+**3. Understandable**
+- Langage clair (français, pas de jargon)
+- Comportements predictibles
+- Erreurs explicites avec solutions
+- Confirmations pour actions destructives
+
+**4. Robust**
+- Semantic HTML (nav, main, button vs div)
+- ARIA attributes via Radix UI
+- Screen reader support
+
+---
+
+### Testing Strategy
+
+**Responsive Testing:**
+- Devices: iPhone, Android, iPad, Desktop browsers
+- Viewports: 320px, 375px, 768px, 1024px, 1920px
+- Tools: DevTools, BrowserStack, Playwright viewports
+
+**Accessibility Testing:**
+- Automated: Lighthouse, axe DevTools, Pa11y CI
+- Manual: Keyboard-only, Screen readers (VoiceOver, NVDA), Color blindness sims
+- User testing: Include users with disabilities
+
+---
+
+### Implementation Guidelines
+
+**Responsive Development:**
+- Mobile-first media queries
+- Relative units (rem, %)
+- `max-w-*` pour desktop
+- Responsive images via `next/image`
+
+**Accessibility Development:**
+- Semantic HTML structure
+- ARIA labels via Radix UI
+- Keyboard navigation
+- Focus management
+- `prefers-reduced-motion` support
 
 ---
 

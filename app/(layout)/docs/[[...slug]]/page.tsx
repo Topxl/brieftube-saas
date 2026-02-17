@@ -48,11 +48,21 @@ export async function generateMetadata(props: DocParams): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  const docs = await getAllDocs();
+  try {
+    const docs = await getAllDocs();
 
-  return docs.map((doc) => ({
-    slug: doc.slug === "" ? undefined : doc.slug.split("/"),
-  }));
+    // Next.js 16 requires at least one result with Cache Components
+    if (docs.length === 0) {
+      return [{ slug: undefined }];
+    }
+
+    return docs.map((doc) => ({
+      slug: doc.slug === "" ? undefined : doc.slug.split("/"),
+    }));
+  } catch {
+    // Fallback during build errors
+    return [{ slug: undefined }];
+  }
 }
 
 function extractToc(content: string): TocItem[] {
