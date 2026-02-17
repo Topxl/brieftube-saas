@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 inputDocuments:
   - '/home/vj/Bureau/Projets/BriefTube/_bmad-output/planning-artifacts/product-brief-BriefTube-2026-02-17.md'
   - '/home/vj/Bureau/Projets/BriefTube/_bmad-output/project-context.md'
@@ -760,6 +760,724 @@ src/components/
 - **What:** Stats visibles (X résumés reçus cette semaine, Y heures économisées)
 - **Action:** View stats, gérer chaînes si nécessaire
 - **Outcome:** Satisfaction de voir progression
+
+---
+
+## Visual Design Foundation
+
+### Color System
+
+**Stratégie Couleur - "Calm & Focused"**
+
+**Contraintes Existantes (Project Context):**
+- ❌ Pas de gradients (sauf demande explicite)
+- ❌ Pas de couleurs agressives (rouge/orange alarmants)
+- ✅ Couleurs apaisantes alignées avec "Calm Technology"
+
+**Palette Recommandée:**
+
+**Primary Colors (Actions & Focus):**
+- **Brand Primary:** Bleu calme ou vert sage (trust, knowledge, calm)
+- **Usage:** Boutons CTA, liens, états actifs
+- **Rationale:** Couleurs apaisantes qui inspirent confiance
+
+**Semantic Colors:**
+- **Success:** Vert doux (confirmations, états réussis)
+- **Warning:** Jaune/amber modéré (alertes non-critiques)
+- **Error:** Rouge atténué (erreurs, pas agressif)
+- **Info:** Bleu clair (informations, tips)
+
+**Neutral Colors:**
+- **Background:** Gris très clair / Blanc pur
+- **Text:** Gris très foncé (pas noir pur pour confort)
+- **Borders:** Gris clair subtil
+- **Disabled:** Gris moyen avec opacité
+
+**Dark Mode:**
+- Support complet (confort utilisateur)
+- Inversions appropriées avec contraste maintenu
+- Background sombre doux (pas noir pur)
+
+**Accessibility:**
+- Tous les contrastes respectent WCAG AA minimum (4.5:1 pour texte)
+- Couleurs pas seules porteuses d'information (icons/labels additionnels)
+
+### Typography System
+
+**Stratégie Typographique - "Readable & Hierarchical"**
+
+**Contraintes Existantes:**
+- Composants typography partagés dans `@/components/nowts/typography.tsx`
+- Lisibilité prioritaire
+- Hierarchy claire
+
+**Type Scale:**
+
+**Headings:**
+- **H1:** Grande taille, fort weight (page titles)
+- **H2:** Taille moyenne, semi-bold (section headers)
+- **H3:** Taille modérée, medium weight (sub-sections)
+- **Usage:** Hierarchy claire, pas plus de 3 niveaux visibles simultanément
+
+**Body Text:**
+- **Regular:** 16px base (mobile), 16-18px desktop
+- **Small:** 14px (metadata, captions)
+- **Line Height:** 1.5-1.6 pour confort de lecture
+
+**Rationale:**
+- Tailles généreuses pour lisibilité mobile
+- Line heights confortables (pas de texte dense)
+- Weights variés pour hierarchy
+
+**Font Strategy:**
+- System fonts par défaut (performance + familiarité)
+- Ou web font optimisée pour lisibilité (à définir)
+- Monospace pour code/technical data si nécessaire
+
+### Spacing & Layout Foundation
+
+**Stratégie Espacement - "Generous & Consistent"**
+
+**Système d'Espacement:**
+
+**Base Unit:** 4px (Tailwind standard)
+
+**Scale:**
+- `gap-1` = 4px (très serré)
+- `gap-2` = 8px (serré)
+- `gap-3` = 12px (normal)
+- `gap-4` = 16px (confortable) ← **Default recommandé**
+- `gap-6` = 24px (spacieux)
+- `gap-8` = 32px (très spacieux)
+
+**Patterns d'Utilisation:**
+- ✅ Préférer `flex gap-4` over `space-y-4` (Project Context)
+- ✅ Vertical spacing: `flex flex-col gap-4`
+- ✅ Horizontal spacing: `flex gap-4`
+- ✅ Sections: `gap-6` ou `gap-8` pour séparer groupes
+
+**Layout Principles:**
+
+**1. Mobile-First Responsive:**
+- Design pour mobile d'abord
+- Breakpoints TailwindCSS: `sm:`, `md:`, `lg:`, `xl:`
+- Touch-friendly (min 44x44px targets)
+
+**2. Content-First Hierarchy:**
+- Contenu principal au centre
+- Actions secondaires accessibles mais pas proéminentes
+- Navigation minimale (pas de sidebar complexe sur mobile)
+
+**3. Generous White Space:**
+- Éviter le clutter visuel
+- Espaces blancs généreux entre sections
+- Padding confortable dans components (p-4, p-6)
+
+**4. Card-Based Layouts:**
+- Utiliser `Card` component (`@/components/ui/card.tsx`)
+- Grouper informations reliées dans cards
+- Shadow subtile pour profondeur
+
+**Grid System:**
+- Tailwind grid utilities (`grid grid-cols-1 md:grid-cols-2`)
+- Responsive columns basé sur device
+- Gaps consistents (`gap-4`)
+
+### Accessibility Considerations
+
+**Standards:**
+- **WCAG AA** minimum (contraste, tailles, keyboard nav)
+- **WCAG AAA** pour texte critique si possible
+
+**Color Accessibility:**
+- Contraste texte/background: 4.5:1 minimum (AA)
+- Ne pas utiliser couleur seule pour information
+- Dark mode avec contraste maintenu
+
+**Typography Accessibility:**
+- Tailles minimales: 16px body, 14px small
+- Line height généreux (1.5+)
+- Pas de texte tout caps long (lisibilité réduite)
+
+**Interaction Accessibility:**
+- Touch targets: 44x44px minimum
+- Keyboard navigation pour tous les contrôles
+- Focus states visibles
+- Screen reader friendly (ARIA via Radix UI)
+
+**Motion Accessibility:**
+- Respecter `prefers-reduced-motion`
+- Animations subtiles par défaut
+- Pas de motion essentielle à la compréhension
+
+---
+
+## Design Direction Decision
+
+### Design Directions Explored
+
+**Direction Choisie: "Calm Productivity" (Déjà Établie)**
+
+Basé sur les contraintes du Project Context et les objectifs émotionnels, BriefTube suit une direction de design claire et cohérente:
+
+**Caractéristiques Visuelles:**
+- **Style:** Minimal, épuré, content-first
+- **Mood:** Calme, professionnel, efficient
+- **Density:** Aéré avec white space généreux
+- **Approach:** Moins c'est plus - focus sur l'essentiel
+
+### Chosen Direction
+
+**"Calm Productivity" - Direction de Design Principale**
+
+**Pilliers Visuels:**
+
+**1. Minimal & Clean**
+- Interface épurée sans clutter
+- Pas de decorations inutiles
+- Focus absolu sur contenu et actions essentielles
+- **Alignement:** Principe "Calm Technology"
+
+**2. Content-First Hierarchy**
+- Typographie claire et hiérarchie évidente
+- Cards pour grouper informations reliées
+- Espaces blancs généreux entre sections
+- **Alignement:** Principe "Respectful of Time"
+
+**3. Subtle & Professional**
+- Pas d'emojis (icônes Lucide à la place)
+- Pas de gradients (couleurs solides)
+- Animations subtiles si nécessaires
+- **Alignement:** Principes "No Noise"
+
+**4. Mobile-First Responsive**
+- Layouts qui s'adaptent naturellement
+- Touch-friendly (targets 44x44px+)
+- Optimisé pour usage mobile principal
+- **Alignement:** Platform Strategy (Telegram mobile)
+
+**5. Trust Through Transparency**
+- États visibles (processing, ready, delivered)
+- Confirmations explicites pour actions importantes
+- Erreurs claires avec solutions
+- **Alignement:** Objectif émotionnel "Confiance"
+
+### Design Rationale
+
+**Pourquoi Cette Direction:**
+
+**1. Alignement avec Objectifs Émotionnels**
+- "Calm & Relief" → Interface épurée, pas de stress visuel
+- "Empowerment" → Contrôles clairs, overview transparent
+- "Efficiency" → Layouts optimisés, zéro distraction
+- "Trust" → Transparence des états, confirmations explicites
+
+**2. Cohérence avec Stack Technique**
+- TailwindCSS + Shadcn UI supporte naturellement cette direction
+- Composants minimaux et professionnels
+- Performance optimale (pas de decorations lourdes)
+
+**3. Différenciation Compétitive**
+- Autres apps souvent surchargées et gamifiées
+- BriefTube se démarque par sa simplicité intentionnelle
+- "Outil professionnel" vs "app de consommation"
+
+**4. Scalabilité Long-Terme**
+- Base solide pour features communautaires futures
+- Facilite ajout de fonctionnalités sans compromettre simplicité
+- Maintenable et évolutive
+
+### Implementation Approach
+
+**Component Strategy:**
+- Utiliser Shadcn UI components comme base (Button, Card, Input, etc.)
+- Créer custom components dans `src/components/nowts/` pour logique métier
+- Composer pour créer features (dashboard, onboarding, settings)
+
+**Visual Consistency:**
+- Respecter les constraints du Project Context
+- Utiliser typography components partagés
+- Patterns d'espacement cohérents (`flex gap-4`)
+- Card-based layouts pour grouping
+
+**Color Application:**
+- Couleurs primaires pour CTAs importantes
+- Neutrals pour la majorité de l'interface
+- Semantic colors pour feedback (success/error/warning)
+- Dark mode supporté
+
+**Responsive Behavior:**
+- Mobile: Single column, stacked layouts
+- Tablet: Two columns où approprié
+- Desktop: Max-width containers, espaces latéraux généreux
+- Breakpoints TailwindCSS standards
+
+---
+
+## User Journey Flows
+
+### Journey 1: Onboarding (First-Time User Experience)
+
+**Objectif:** Transformer un nouveau visiteur en utilisateur qui reçoit son premier résumé audio
+
+**Flow Détaillé:**
+
+```mermaid
+graph TD
+    A[Landing Page Visit] --> B{Intéressé?}
+    B -->|Non| Z1[Exit]
+    B -->|Oui| C[Sign Up]
+    C --> D[Dashboard: Welcome]
+    D --> E[Add First Channel]
+    E --> F{Channel Added?}
+    F -->|Error| E
+    F -->|Success| G[Prompt: Add More or Connect Telegram]
+    G --> H{User Choice}
+    H -->|Add More| E
+    H -->|Connect Telegram| I[Telegram Connection Flow]
+    I --> J[Follow Instructions]
+    J --> K{Telegram Connected?}
+    K -->|Failed| I
+    K -->|Success| L[Confirmation: Setup Complete]
+    L --> M[Wait for First Video]
+    M --> N[Background: Video Detected]
+    N --> O[Background: Processing]
+    O --> P[Telegram: Summary Delivered]
+    P --> Q[User Listens]
+    Q --> R[Aha Moment: This Works!]
+```
+
+**Points Clés du Flow:**
+- **Entry:** Landing page avec value prop claire
+- **Friction Point:** Ajout manuel de chaînes (pain identifié)
+- **Success Moment:** "Telegram connecté ✅"
+- **Value Proof:** Premier résumé reçu (<24h)
+- **Aha Moment:** Première écoute réussie
+
+**Optimisations:**
+- Permettre skip de "add more channels" (minimum 1 chaîne suffit)
+- Progress indicator clair (étape 1/3, 2/3, 3/3)
+- Explications inline pendant l'attente du premier résumé
+- Option "See Example Summary" pendant l'attente
+
+---
+
+### Journey 2: Daily Usage (Core Loop)
+
+**Objectif:** Utilisateur consomme résumés quotidiennement sans friction
+
+**Flow Détaillé:**
+
+```mermaid
+graph TD
+    A[Background: New Video Detected] --> B[Background: Transcription]
+    B --> C[Background: Summarization]
+    C --> D[Background: TTS Generation]
+    D --> E[Telegram: Notification Sent]
+    E --> F{User Opens Telegram}
+    F -->|Immédiatement| G[Play Audio]
+    F -->|Plus Tard| H[Audio in Queue]
+    H --> G
+    G --> I{Listening Experience}
+    I -->|Complete| J[Mark as Listened]
+    I -->|Skip| K[Move to Next]
+    I -->|Interrupted| L[Save Progress]
+    J --> M[Ready for Next Summary]
+    K --> M
+    L --> N[Resume Later]
+```
+
+**Points Clés du Flow:**
+- **Trigger:** Automatique (nouvelle vidéo détectée)
+- **User Action:** Minimal (juste click play)
+- **Flexibility:** Peut écouter immédiatement ou plus tard
+- **Completion:** Tracking pour stats
+
+**Optimisations:**
+- Aucune action requise (100% automatique jusqu'à notification)
+- Queue naturelle sur Telegram (messages en ordre)
+- Resume position si interrompu (future enhancement)
+
+---
+
+### Journey 3: Channel Management
+
+**Objectif:** Ajouter ou retirer chaînes YouTube facilement
+
+**Flow Détaillé:**
+
+```mermaid
+graph TD
+    A[Dashboard: Channels Page] --> B{User Action}
+    B -->|Add Channel| C[Click Add Button]
+    B -->|Remove Channel| D[Click Remove on Channel]
+    C --> E[Search Input Focus]
+    E --> F[Type Channel Name/URL]
+    F --> G[Autocomplete Results]
+    G --> H{Select Channel}
+    H -->|No Match| F
+    H -->|Match| I[Confirm Add]
+    I --> J{Limit Reached?}
+    J -->|Yes, Free Plan| K[Upgrade Prompt]
+    J -->|No| L[Channel Added to List]
+    L --> M[Status: Monitoring]
+    D --> N[Confirm Delete Dialog]
+    N --> O{Confirm?}
+    O -->|Cancel| A
+    O -->|Delete| P[Channel Removed]
+    P --> A
+```
+
+**Points Clés du Flow:**
+- **Entry:** Dashboard channels page
+- **Add:** Recherche avec autocomplete (rapide)
+- **Remove:** Confirmation pour éviter accidents
+- **Limit:** Plan Free limité, upgrade prompt contextuel
+
+**Optimisations:**
+- Autocomplete instantané (<500ms)
+- Preview channel info avant ajout
+- Bulk add (future): sélection multiple
+- Import shortcuts (paste list of URLs - future)
+
+---
+
+### Journey Patterns
+
+**Pattern 1: "Immediate Feedback"**
+- Toute action user → confirmation visuelle immédiate
+- Exemples: "Channel added ✅", "Telegram connected ✅", "Processing..."
+- **Application:** Chaque interaction majeure
+
+**Pattern 2: "Progressive Disclosure"**
+- Informations/options révélées au besoin
+- Exemples: Settings avancés cachés par défaut, upgrade prompt contextuel
+- **Application:** Éviter overwhelm initial
+
+**Pattern 3: "Error Recovery with Guidance"**
+- Erreurs montrent le problème + solution
+- Exemples: "Channel not found - Try searching by name", "Telegram connection failed - Retry"
+- **Application:** Tous les error states
+
+**Pattern 4: "Background Magic, Visible States"**
+- Automation invisible, mais états visibles
+- Exemples: "X videos processing", "Last summary: 2 hours ago"
+- **Application:** Tout processus asynchrone
+
+### Flow Optimization Principles
+
+**1. Minimize Steps to Value**
+- Onboarding: 3 steps max jusqu'à "setup complete"
+- Add channel: <10 secondes
+- Connect Telegram: <1 minute
+
+**2. Clear Progress Indicators**
+- Onboarding: Step X/Y visible
+- Processing: "Processing video 3/5"
+- Multi-step flows: Breadcrumbs ou progress bar
+
+**3. Graceful Error Handling**
+- Errors jamais bloquants sans solution
+- Retry options toujours disponibles
+- Explications claires (pas de codes d'erreur techniques)
+
+**4. Delight at Key Moments**
+- First summary delivered: Célébration subtile
+- Telegram connected: Animation de succès
+- Milestone reached (100 videos): Reconnaissance
+
+---
+
+## Component Strategy
+
+### Design System Components
+
+**Disponibles via Shadcn UI (Base Foundation):**
+
+**Form Components:**
+- `Button` - CTAs, actions, navigation
+- `Input` - Text inputs, recherche
+- `Select` - Dropdowns (voix TTS, settings)
+- `Checkbox` / `Switch` - Toggles, préférences
+- `Label` - Labels de formulaires
+
+**Layout Components:**
+- `Card` - Grouping d'informations (chaînes, stats)
+- `Separator` - Dividers entre sections
+- `Tabs` - Navigation settings/billing
+- `Accordion` - Collapse/expand sections
+
+**Feedback Components:**
+- `Dialog` - Confirmations (delete channel)
+- `Alert` - Messages importants
+- `Toast` / `Sonner` - Notifications temporaires
+- `Progress` - Progress bars (onboarding)
+- `Skeleton` - Loading states
+
+**Data Display:**
+- `Avatar` - Channel avatars, user profile
+- `Badge` - Status indicators (Pro, Free)
+- `Table` - Lists de données (future: playlists)
+
+**Navigation:**
+- `Dropdown Menu` - User menu, actions
+- `Popover` - Tooltips, info additionnelle
+
+---
+
+### Custom Components
+
+**Composants Métier BriefTube:**
+
+**1. ChannelCard**
+- **Purpose:** Afficher chaîne YouTube abonnée avec actions
+- **Content:** Avatar, nom chaîne, nombre d'abonnés, statut monitoring
+- **Actions:** Remove button, view details
+- **States:** Default, monitoring, error (channel deleted)
+- **Variants:** Compact (liste), Expanded (détails)
+- **Location:** `src/components/nowts/channel-card.tsx`
+
+**2. OnboardingStepper**
+- **Purpose:** Guider utilisateur à travers onboarding multi-step
+- **Content:** Step indicators (1/3, 2/3, 3/3), descriptions
+- **States:** Current, completed, upcoming
+- **Variants:** Horizontal (desktop), Vertical (mobile)
+- **Location:** `src/components/dashboard/onboarding-stepper.tsx` ✅ (existe)
+
+**3. TelegramConnectionStatus**
+- **Purpose:** Afficher statut connexion Telegram
+- **Content:** État (connected/not connected), instructions si non connecté
+- **Actions:** Connect button, disconnect, test connection
+- **States:** Not connected, connecting, connected, error
+- **Location:** `src/components/dashboard/telegram-status.tsx`
+
+**4. StatsDashboardWidget**
+- **Purpose:** Afficher métriques clés (vidéos écoutées, temps économisé)
+- **Content:** Number stat, label, icon, trend (optional)
+- **Variants:** Small (grid 3 cols), Large (featured stat)
+- **States:** Loading (skeleton), loaded, empty state
+- **Location:** `src/components/dashboard/stats-widget.tsx`
+
+**5. ChannelSearch**
+- **Purpose:** Recherche rapide de chaînes YouTube avec autocomplete
+- **Content:** Search input, autocomplete results dropdown
+- **Actions:** Type to search, select result, add channel
+- **States:** Empty, searching (loading), results, no results
+- **Location:** `src/components/dashboard/channel-search.tsx`
+
+**6. SummariesFeed**
+- **Purpose:** Afficher feed des vidéos traitées/résumés
+- **Content:** Liste de vidéos avec thumbnail, titre, chaîne, status
+- **States:** Loading, empty, populated, error
+- **Location:** `src/components/dashboard/summaries-feed.tsx` ✅ (existe)
+
+**7. ProcessingStatusIndicator**
+- **Purpose:** Montrer statut traitement vidéos en cours
+- **Content:** "X videos processing", progress indicator
+- **States:** Idle, processing, error
+- **Location:** `src/components/dashboard/processing-status.tsx`
+
+---
+
+### Component Implementation Strategy
+
+**Approche de Construction:**
+- Composer avec Shadcn UI primitives
+- Respecter Project Context constraints (no emojis, no gradients)
+- Utiliser typography components partagés
+- Patterns d'espacement cohérents (`flex gap-4`)
+- Accessibility first (WCAG AA via Radix UI)
+- Mobile-first responsive
+
+---
+
+### Implementation Roadmap
+
+**Phase 1 - MVP Core (Priorité Haute):**
+- ✅ `OnboardingStepper` (existe)
+- ✅ `SummariesFeed` (existe)
+- 🔨 `ChannelCard` (essentiel pour gestion)
+- 🔨 `ChannelSearch` (essentiel pour onboarding)
+- 🔨 `TelegramConnectionStatus` (essentiel pour setup)
+
+**Phase 2 - Dashboard Enhancement:**
+- 🔨 `StatsDashboardWidget` (engagement et retention)
+- 🔨 `ProcessingStatusIndicator` (transparence et confiance)
+
+**Phase 3 - Future Features (Post-MVP):**
+- 🔮 `PlaylistCard` (playlists communautaires)
+- 🔮 `CuratorProfile` (profils curateurs)
+- 🔮 `PlaylistBrowser` (discovery communautaire)
+
+---
+
+## UX Consistency Patterns
+
+### Button Hierarchy
+
+**Primary Actions (CTAs Principales):**
+- **Visual:** Couleur primary, bold, high contrast
+- **Usage:** Une seule par vue (Add Channel, Connect Telegram, Upgrade)
+- **Behavior:** Hover state visible, loading state si async
+- **Mobile:** Full-width sur mobile, inline sur desktop
+- **Example:** "Add Channel", "Connect Telegram", "Upgrade to Pro"
+
+**Secondary Actions:**
+- **Visual:** Outline ou ghost variant, moins prominent
+- **Usage:** Actions alternatives (Cancel, Back, Skip)
+- **Behavior:** Hover subtil, pas de loading state
+- **Example:** "Skip for now", "Cancel", "View Details"
+
+**Destructive Actions:**
+- **Visual:** Red/destructive variant (atténué, pas agressif)
+- **Usage:** Delete, Remove, Disconnect (avec confirmation)
+- **Behavior:** Dialog de confirmation requis
+- **Example:** "Remove Channel" (avec dialog)
+
+**Icon-Only Actions:**
+- **Visual:** Icon button ghost
+- **Usage:** Actions contextuelles (settings, more options)
+- **Behavior:** Tooltip on hover, aria-label requis
+- **Mobile:** Larger touch target (44x44px)
+
+---
+
+### Feedback Patterns
+
+**Success Feedback:**
+- **Visual:** Toast notification vert doux, check icon
+- **Duration:** 3-5 secondes puis auto-dismiss
+- **Content:** Action completed + impact ("Channel added - Now monitoring")
+- **Accessibility:** aria-live region
+
+**Error Feedback:**
+- **Visual:** Alert component rouge atténué, error icon
+- **Duration:** Persistent jusqu'à action user
+- **Content:** Problème + solution ("Channel not found - Try searching by name")
+- **Accessibility:** Focus sur message, screen reader friendly
+
+**Warning Feedback:**
+- **Visual:** Warning banner jaune/amber, warning icon
+- **Usage:** Limits approachés, actions réversibles
+- **Content:** Warning + conséquence ("1 channel left on Free plan")
+- **Example:** Plan limits, quota warnings
+
+**Info Feedback:**
+- **Visual:** Info banner bleu clair, info icon
+- **Usage:** Tips, explications contextuelles
+- **Content:** Information utile non-critique
+- **Example:** "Summaries usually arrive within 24h"
+
+**Processing States:**
+- **Visual:** Loading spinner ou skeleton, pulse animation
+- **Content:** "Processing X videos...", "Connecting..."
+- **Behavior:** Non-blocking, peut continuer navigation
+- **Example:** Video processing status
+
+---
+
+### Form Patterns
+
+**Validation Strategy:**
+- **Timing:** On blur (pas on change pour éviter frustration)
+- **Success:** Pas de feedback visuel (silence = succès)
+- **Error:** Message en dessous du field, field outline rouge subtil
+- **Required Fields:** Asterisk ou (required) label
+
+**Error Display:**
+- **Visual:** Texte rouge subtil sous le field
+- **Content:** Specific problem + guidance ("Email invalid - Use format: you@example.com")
+- **Recovery:** Error disparaît dès que field est corrigé
+
+**Submit Behavior:**
+- **Loading:** Button montre loading spinner + disabled
+- **Success:** Toast confirmation + redirect ou refresh
+- **Error:** Form reste visible, errors affichés, focus sur premier error
+
+**Multi-Step Forms (Onboarding):**
+- **Progress:** Step indicator visible (1/3, 2/3, 3/3)
+- **Navigation:** Next/Back buttons, can skip optional steps
+- **State:** Sauvegarde progress automatique (future)
+
+---
+
+### Navigation Patterns
+
+**Dashboard Navigation:**
+- **Structure:** Top nav (mobile: hamburger), sidebar (desktop: optional)
+- **Current Page:** Indicator visuel clair
+- **Mobile:** Bottom nav ou hamburger menu
+- **Persistence:** Navigation state preserved
+
+**Breadcrumbs:**
+- **Usage:** Multi-level pages (Settings > Billing > Plan)
+- **Behavior:** Click to navigate back
+- **Mobile:** Collapse si trop long
+
+**Back Navigation:**
+- **Browser Back:** Toujours fonctionnel
+- **Custom Back:** Si flow spécial (onboarding)
+- **Context:** Preserve scroll position
+
+---
+
+### Empty States
+
+**No Channels Added:**
+- **Visual:** Illustration simple (SVG) + texte explicatif
+- **Content:** "No channels yet - Add your first YouTube channel to get started"
+- **Action:** CTA prominent "Add Channel"
+- **Tone:** Encourageant, pas négatif
+
+**No Summaries Yet:**
+- **Visual:** Loading animation ou placeholder
+- **Content:** "Processing your first video - Summaries usually arrive within 24h"
+- **Action:** "View Example Summary" (demo)
+- **Tone:** Patient, gérer l'attente
+
+**Search No Results:**
+- **Visual:** Search icon + texte
+- **Content:** "No channels found - Try a different search term"
+- **Action:** Clear search, suggestions
+- **Tone:** Helpful, pas bloquant
+
+---
+
+### Loading States
+
+**Page Loading:**
+- **Visual:** Skeleton screens (miment layout final)
+- **Duration:** Optimisé pour <1 seconde
+- **Behavior:** Progressive enhancement (contenu apparaît progressivement)
+
+**Component Loading:**
+- **Visual:** Spinner dans le component
+- **Fallback:** Skeleton ou previous content
+- **Behavior:** Non-blocking pour reste de la page
+
+**Background Processing:**
+- **Visual:** Subtle indicator ("X processing" badge)
+- **Location:** Top-right dashboard ou dans section relevante
+- **Behavior:** Update en temps réel (polling ou websocket)
+
+---
+
+### Modal/Overlay Patterns
+
+**Confirmation Dialogs:**
+- **Usage:** Actions destructives (delete, disconnect)
+- **Content:** Question claire + conséquences
+- **Actions:** Destructive action (red) + Cancel (default focus)
+- **Behavior:** Escape key to cancel, click outside to cancel
+
+**Info Modals:**
+- **Usage:** Explications détaillées, help content
+- **Content:** Titre + texte explicatif + optional CTA
+- **Behavior:** Close button visible, escape key works
+
+**Full-Screen Modals:**
+- **Usage:** Flows complexes (onboarding, settings)
+- **Behavior:** Can navigate within, clear exit
 
 ---
 

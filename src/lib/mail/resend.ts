@@ -2,11 +2,18 @@ import { Resend } from "resend";
 import { env } from "../env";
 import type { MailAdapter } from "./send-email";
 
-export const resend = new Resend(env.RESEND_API_KEY);
+const resendInstance = env.RESEND_API_KEY
+  ? new Resend(env.RESEND_API_KEY)
+  : null;
+
+export const resend = resendInstance as Resend;
 
 export const resendMailAdapter: MailAdapter = {
   send: async (params) => {
-    const result = await resend.emails.send(params);
+    if (!resendInstance) {
+      throw new Error("Resend is not configured. Set RESEND_API_KEY.");
+    }
+    const result = await resendInstance.emails.send(params);
 
     if (result.error) {
       return { error: new Error(result.error.message), data: null };

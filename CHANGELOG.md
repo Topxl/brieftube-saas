@@ -11,6 +11,7 @@ FIX: Make Stripe and email environment variables optional to allow builds withou
 FIX: Update stripe.ts to handle optional STRIPE_SECRET_KEY with proper type casting
 FIX: Configure pre-commit hook with TypeScript and ESLint checks to prevent build failures
 FIX: Update ESLint configuration to ignore worker/ directory and Python virtual environment files
+FIX: Update GitHub Actions workflows to make Stripe/Resend secrets optional and rename database to brieftube_test
 
 ## 2026-02-17
 
