@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import { pretty, render } from "@react-email/render";
 import { nanoid } from "nanoid";
 import { resendMailAdapter } from "./resend";
+import { consoleMailAdapter } from "./console-adapter";
 
 type EmailParams = {
   from: string;
@@ -49,7 +50,11 @@ export type MailAdapter = {
  */
 
 // If you use another mail adapter, you can replace the mailAdapter with your own
-const mailAdapter: MailAdapter = resendMailAdapter;
+// In development without Resend, use console adapter to show links in logs
+const mailAdapter: MailAdapter =
+  env.NODE_ENV === "development" && !env.RESEND_API_KEY
+    ? consoleMailAdapter
+    : resendMailAdapter;
 
 type SendEmailParams = Omit<EmailParams, "from" | "html"> & {
   from?: string;
