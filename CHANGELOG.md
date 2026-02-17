@@ -6,6 +6,7 @@ FEATURE: Add Telegram monitoring system for worker with real-time alerts and adm
 FEATURE: Add worker management scripts (start.sh, stop.sh, restart.sh)
 FEATURE: Add console email adapter for development (shows verification links in logs instead of sending emails)
 FIX: Email verification bug - links now shown in console during development when Resend is not configured
+FIX: Disable mandatory email verification on signup (users can now login immediately without verifying email)
 CHORE: Add psutil dependency for system monitoring
 FEATURE: Add dynamic favicon generation using Next.js ImageResponse API matching site logo
 REFACTOR: Rename project from "Boilerplate" to "BriefTube" across all configuration files
