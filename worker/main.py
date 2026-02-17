@@ -256,7 +256,19 @@ async def delivery_loop(alert_system: MonitoringAlert):
 
     while True:
         try:
-            deliveries = db.get_pending_deliveries(limit=10)
+            # Get pending deliveries with retry on connection errors
+            deliveries = []
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    deliveries = db.get_pending_deliveries(limit=10)
+                    break
+                except Exception as e:
+                    if attempt < max_retries - 1:
+                        logger.warning(f"Delivery fetch failed (attempt {attempt + 1}/{max_retries}): {e}")
+                        await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                    else:
+                        raise
 
             for d in deliveries:
                 try:
@@ -318,8 +330,19 @@ async def delivery_loop(alert_system: MonitoringAlert):
             cleanup_audio_files(max_age_hours=1)
 
         except Exception as e:
-            logger.error(f"Delivery loop error: {e}")
-            await asyncio.sleep(15)
+            error_msg = str(e)
+            logger.error(f"Delivery loop error: {error_msg}")
+
+            # Alert on persistent delivery errors
+            if "Server disconnected" in error_msg or "ConnectionTerminated" in error_msg:
+                logger.warning("Supabase connection issue - will retry")
+                await asyncio.sleep(30)  # Wait longer before retry
+            else:
+                await alert_system.send_alert(
+                    f"🔴 **Delivery Loop Error**\n\n{error_msg[:150]}",
+                    level="ERROR"
+                )
+                await asyncio.sleep(15)
 
 
 # ── Main ───────────────────────────────────────────────────────

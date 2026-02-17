@@ -2,6 +2,7 @@
 
 import { orgAction } from "@/lib/actions/safe-actions";
 import { ActionError } from "@/lib/errors/action-error";
+import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { getServerUrl } from "@/lib/server-url";
 import { stripe } from "@/lib/stripe";
@@ -14,24 +15,34 @@ export const openStripePortalAction = orgAction
     },
   })
   .action(async ({ ctx: { org } }) => {
-    const stripeCustomerId = org.stripeCustomerId;
+    try {
+      const stripeCustomerId = org.stripeCustomerId;
 
-    if (!stripeCustomerId) {
-      throw new ActionError("No stripe customer id found");
+      logger.info("Opening Stripe portal", {
+        orgId: org.id,
+        hasCustomerId: !!stripeCustomerId,
+      });
+
+      if (!stripeCustomerId) {
+        throw new ActionError("No stripe customer id found");
+      }
+
+      const stripeBilling = await stripe.billingPortal.sessions.create({
+        customer: stripeCustomerId,
+        return_url: `${getServerUrl()}/orgs/${org.slug}/settings/billing`,
+      });
+
+      logger.info("Stripe portal created", { url: stripeBilling.url });
+
+      return {
+        url: stripeBilling.url,
+      };
+    } catch (error) {
+      logger.error("Failed to create Stripe portal", { error });
+      throw error instanceof ActionError
+        ? error
+        : new ActionError("Failed to create billing portal");
     }
-
-    const stripeBilling = await stripe.billingPortal.sessions.create({
-      customer: stripeCustomerId,
-      return_url: `${getServerUrl()}/orgs/${org.slug}/settings/billing`,
-    });
-
-    if (!stripeBilling.url) {
-      throw new ActionError("Failed to create stripe billing portal session");
-    }
-
-    return {
-      url: stripeBilling.url,
-    };
   });
 
 export const cancelOrgSubscriptionAction = orgAction
@@ -46,32 +57,42 @@ export const cancelOrgSubscriptionAction = orgAction
     }),
   )
   .action(async ({ parsedInput: { returnUrl }, ctx: { org } }) => {
-    const stripeCustomerId = org.stripeCustomerId;
+    try {
+      const stripeCustomerId = org.stripeCustomerId;
 
-    if (!stripeCustomerId) {
-      throw new ActionError("No stripe customer id found");
+      logger.info("Creating cancel portal", {
+        orgId: org.id,
+        hasCustomerId: !!stripeCustomerId,
+      });
+
+      if (!stripeCustomerId) {
+        throw new ActionError("No stripe customer id found");
+      }
+
+      // Get the current subscription
+      const subscription = await prisma.subscription.findFirst({
+        where: { referenceId: org.id },
+      });
+
+      if (!subscription?.stripeSubscriptionId) {
+        throw new ActionError("No active subscription found");
+      }
+
+      // Create billing portal session which allows the user to cancel
+      const stripeBilling = await stripe.billingPortal.sessions.create({
+        customer: stripeCustomerId,
+        return_url: `${getServerUrl()}${returnUrl}`,
+      });
+
+      logger.info("Cancel portal created", { url: stripeBilling.url });
+
+      return {
+        url: stripeBilling.url,
+      };
+    } catch (error) {
+      logger.error("Failed to create cancel portal", { error });
+      throw error instanceof ActionError
+        ? error
+        : new ActionError("Failed to create billing portal");
     }
-
-    // Get the current subscription
-    const subscription = await prisma.subscription.findFirst({
-      where: { referenceId: org.id },
-    });
-
-    if (!subscription?.stripeSubscriptionId) {
-      throw new ActionError("No active subscription found");
-    }
-
-    // Create billing portal session which allows the user to cancel
-    const stripeBilling = await stripe.billingPortal.sessions.create({
-      customer: stripeCustomerId,
-      return_url: `${getServerUrl()}${returnUrl}`,
-    });
-
-    if (!stripeBilling.url) {
-      throw new ActionError("Failed to create stripe billing portal session");
-    }
-
-    return {
-      url: stripeBilling.url,
-    };
   });
