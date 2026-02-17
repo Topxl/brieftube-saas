@@ -9,6 +9,7 @@ FIX: Email verification bug - links now shown in console during development when
 FIX: Disable mandatory email verification on signup (users can now login immediately without verifying email)
 FIX: Add proper error handling and logging in billing actions to prevent JSON parse errors
 FIX: Update Stripe price ID configuration to use STRIPE_PRO_PRICE_ID instead of STRIPE_PRO_PLAN_ID
+FIX: Redirect legacy dashboard billing page to organization billing to fix 405 and JSON parse errors
 CHORE: Add psutil dependency for system monitoring
 FEATURE: Add dynamic favicon generation using Next.js ImageResponse API matching site logo
 REFACTOR: Rename project from "Boilerplate" to "BriefTube" across all configuration files
