@@ -7,7 +7,6 @@ on:
     paths:
       - "src/**"
       - "app/**"
-      - "prisma/**"
       - "e2e/**"
       - ".github/workflows/playwright.yml"
   push:
@@ -15,13 +14,10 @@ on:
     paths:
       - "src/**"
       - "app/**"
-      - "prisma/**"
       - "e2e/**"
-      - "content/**"
       - "package.json"
       - "pnpm-lock.yaml"
 
-# Cancel previous runs on the same PR/branch
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -32,65 +28,27 @@ jobs:
     timeout-minutes: 60
     runs-on: ubuntu-latest
 
-    # Common environment variables for all steps
     env:
-      # Core
-      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/brieftube_test"
-      DATABASE_URL_UNPOOLED: "postgresql://postgres:postgres@localhost:5432/brieftube_test"
-      REDIS_URL: "redis://localhost:6379"
-      BETTER_AUTH_SECRET: "test-secret-key-for-ci-testing-only-not-production"
-      BETTER_AUTH_URL: "http://localhost:3000"
       NODE_ENV: "production"
-      # Email (optional - set secrets in GitHub if using email)
-      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY || '' }}
+      # Supabase
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Email
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       EMAIL_FROM: "BriefTube <contact@brieftube.app>"
       NEXT_PUBLIC_EMAIL_CONTACT: "contact@brieftube.app"
-      # Stripe (optional - set secrets in GitHub if using payments)
-      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY || '' }}
-      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '' }}
-      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET || '' }}
-      STRIPE_PRO_PLAN_ID: ${{ secrets.STRIPE_PRO_PLAN_ID || '' }}
-      STRIPE_PRO_YEARLY_PLAN_ID: ${{ secrets.STRIPE_PRO_YEARLY_PLAN_ID || '' }}
-      STRIPE_ULTRA_PLAN_ID: ${{ secrets.STRIPE_ULTRA_PLAN_ID || '' }}
-      STRIPE_ULTRA_YEARLY_PLAN_ID: ${{ secrets.STRIPE_ULTRA_YEARLY_PLAN_ID || '' }}
-      # OAuth
-      GITHUB_CLIENT_ID: ${{ secrets.OAUTH_GITHUB_CLIENT_ID }}
-      GITHUB_CLIENT_SECRET: ${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}
-      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-      # Analytics
-      NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
-      NEXT_PUBLIC_POSTHOG_HOST: ${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
-      # Playwright specific
+      # Stripe
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+      STRIPE_PRO_PRICE_ID: ${{ secrets.STRIPE_PRO_PRICE_ID }}
+      # Playwright
       PLAYWRIGHT_TEST_BASE_URL: "http://localhost:3000"
       HEADLESS: "true"
       CI: "true"
       PORT: 3000
-
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_DB: brieftube_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-      redis:
-        image: redis/redis-stack-server:6.2.6-v6
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
 
     steps:
       - name: Checkout
@@ -119,15 +77,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --prod=false
-
-      - name: Generate Prisma client
-        run: pnpm prisma generate
-
-      - name: Deploy database migrations
-        run: pnpm prisma migrate deploy
-
-      - name: Verify database schema
-        run: pnpm prisma migrate status
 
       - name: Build application
         run: pnpm build
