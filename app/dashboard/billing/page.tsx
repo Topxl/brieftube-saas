@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 
 export default async function BillingPage() {
@@ -78,9 +77,11 @@ export default async function BillingPage() {
             </div>
 
             {!isPro && (
-              <Button asChild className="w-full">
-                <Link href="/pricing">Upgrade to Pro</Link>
-              </Button>
+              <form action="/api/stripe/checkout" method="POST">
+                <Button type="submit" className="w-full">
+                  Upgrade to Pro
+                </Button>
+              </form>
             )}
           </CardContent>
         </Card>

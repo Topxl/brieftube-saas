@@ -30,5 +30,5 @@ export async function POST() {
     return_url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/dashboard/billing`,
   });
 
-  return NextResponse.redirect(session.url);
+  return NextResponse.redirect(session.url, 303);
 }
