@@ -14,9 +14,6 @@ export function createClient() {
   return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
 }
 
-// Singleton instance for client-side usage
-export const supabase = createClient();
-
 // Export types for convenience
 export type Profile = Tables<"profiles">;
 export type Subscription = Tables<"subscriptions">;
