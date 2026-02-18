@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-02-19
+
+FIX: CI — Remove missing global-teardown reference from playwright.config.ts (e2e/ dir doesn't exist yet)
+
+
+
+FIX: Worker — hallucination Gemini : suppression de l'URL YouTube du prompt (Gemini utilisait sa connaissance d'entraînement au lieu de la transcription)
+FIX: Worker — hallucination Gemini : length guidance corrigée pour les courtes transcriptions (plus jamais plus de mots demandés que l'original)
+FIX: Subscription — ne retraite plus une vidéo déjà completed/pending/processing lors d'un nouvel abonnement (delivery créée directement)
+REFACTOR: Worker — processor_loop concurrent : jusqu'à MAX_CONCURRENT_VIDEOS (défaut 3) vidéos traitées en parallèle via asyncio.Semaphore
+FIX: Worker — _pick_lock (asyncio.Lock) sur pick_next_job pour éviter que deux tâches concurrentes sélectionnent le même job
+REFACTOR: Worker — extraction de _process_video() comme coroutine indépendante, processor_loop simplifié
+
+FEATURE: Create onboarding wizard /onboarding — 3 steps inline (add source, select voice, connect Telegram with live polling)
+FEATURE: Unified dashboard — Sources, Summaries and Delivery sections on one page (remove separate channels/settings pages)
+FEATURE: SourcesSection component with inline add/remove and dialogManager confirmation
+FEATURE: DeliverySection component with Telegram inline modal (live polling) and compact voice selector
+REFACTOR: Dashboard nav simplified — remove Channels and Settings links, keep Dashboard + Billing
+CHORE: DB migration — add onboarding_completed to profiles, source_type to subscriptions
+CHORE: Update Supabase TypeScript types with new columns
+
 ## 2026-02-18
 
 FEATURE: P1 — Aha moment : queue la dernière vidéo immédiatement à l'abonnement d'une chaîne pour livraison instantanée sur Telegram
@@ -8,6 +29,11 @@ FEATURE: P4 — Nouveau hero landing orienté bénéfice ("sans regarder une seu
 FEATURE: P5 — Reverse trial 14 jours Pro pour les nouveaux inscrits : migration Supabase trial_ends_at, banner countdown dashboard, statut "Pro trial · X days left"
 CHORE: Ajouter GEMINI_API_KEY à env.ts + @google/generative-ai
 CHORE: Régénérer les types Supabase (trial_ends_at dans profiles)
+FEATURE: Worker — log_bot.py, bot Telegram dédié au monitoring des logs worker (/logs, /errors, /status, /watch, /stop)
+FIX: Worker — modèles Gemini restaurés avec gemini-3-flash-preview (confirmé fonctionnel dans les logs) + fallbacks gemini-3-pro-preview / gemini-2.5-flash / gemini-2.0-flash
+FIX: Worker — transcript_extractor retournait 3 valeurs au lieu de 4 → ValueError au unpack dans main.py
+FIX: Worker — db.requeue_job n'existait pas → remplacé par db.fail_job (qui requeue déjà automatiquement)
+FIX: Worker — modèles Gemini 3 inexistants retirés de la liste → les 2 premiers échouaient toujours silencieusement
 FIX: Race condition à l'abonnement — marquer toutes les vidéos comme "skipped" avant d'insérer la subscription, pour éviter que le scanner crée des deliveries pour les vieilles vidéos
 FIX: Remove DATABASE_URL from env schema — Prisma removed, Supabase client used directly
 FIX: Use HTTP 303 redirect in Stripe checkout route to force GET and avoid CloudFront 403
