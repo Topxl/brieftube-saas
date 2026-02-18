@@ -163,24 +163,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Add subscription with real YouTube data
-  const { data, error } = await supabase
-    .from("subscriptions")
-    .insert({
-      user_id: user.id,
-      channel_id: finalChannelId,
-      channel_name: finalChannelName,
-      channel_avatar_url: finalAvatarUrl,
-      active: true,
-    })
-    .select()
-    .single();
+  // Before inserting the subscription, mark all existing channel videos in
+  // processed_videos so the RSS scanner never sees them as "new".
+  // This prevents a race condition where the scanner runs between the subscription
+  // insert and the video initialisation, creating spurious deliveries for old videos.
+  let latestVideo: { videoId: string; title: string | null } | null = null;
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  // Aha moment: queue the latest video immediately, skip all older ones
   try {
     const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${finalChannelId}`;
     const rssResponse = await fetch(rssUrl);
@@ -203,25 +191,71 @@ export async function POST(request: NextRequest) {
     if (videos.length === 0) {
       logger.info(`No videos found in RSS for channel ${finalChannelId}`);
     } else {
-      const [latest, ...older] = videos;
-      const latestTitle = latest.title ?? latest.videoId;
-      const latestUrl = `https://www.youtube.com/watch?v=${latest.videoId}`;
+      // Mark ALL videos as skipped first — this blocks the scanner from picking
+      // them up while we insert the subscription below.
+      await Promise.all(
+        videos.map((v) =>
+          supabase.from("processed_videos").upsert(
+            {
+              video_id: v.videoId,
+              channel_id: finalChannelId,
+              video_title: "[pre-subscription]",
+              video_url: `https://www.youtube.com/watch?v=${v.videoId}`,
+              status: "skipped",
+            },
+            { onConflict: "video_id", ignoreDuplicates: true },
+          ),
+        ),
+      );
 
-      // Queue the latest video for immediate processing (aha moment)
+      // Remember the latest video so we can queue it after the subscription is saved.
+      latestVideo = videos[0];
+      logger.info(
+        `Pre-marked ${videos.length} videos as skipped for channel ${finalChannelId}`,
+      );
+    }
+  } catch (e) {
+    logger.error("Failed to pre-mark channel videos:", e);
+  }
+
+  // Add subscription with real YouTube data
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .insert({
+      user_id: user.id,
+      channel_id: finalChannelId,
+      channel_name: finalChannelName,
+      channel_avatar_url: finalAvatarUrl,
+      active: true,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Aha moment: upgrade the latest video from "skipped" to "pending" and queue it
+  if (latestVideo) {
+    try {
+      const latestTitle = latestVideo.title ?? latestVideo.videoId;
+      const latestUrl = `https://www.youtube.com/watch?v=${latestVideo.videoId}`;
+
+      // Overwrite status to "pending" (no ignoreDuplicates — we want to update it)
       await supabase.from("processed_videos").upsert(
         {
-          video_id: latest.videoId,
+          video_id: latestVideo.videoId,
           channel_id: finalChannelId,
           video_title: latestTitle,
           video_url: latestUrl,
           status: "pending",
         },
-        { onConflict: "video_id", ignoreDuplicates: true },
+        { onConflict: "video_id" },
       );
 
       await supabase.from("processing_queue").upsert(
         {
-          video_id: latest.videoId,
+          video_id: latestVideo.videoId,
           youtube_url: latestUrl,
           video_title: latestTitle,
           channel_id: finalChannelId,
@@ -233,36 +267,18 @@ export async function POST(request: NextRequest) {
       await supabase.from("deliveries").upsert(
         {
           user_id: user.id,
-          video_id: latest.videoId,
+          video_id: latestVideo.videoId,
           status: "pending",
         },
         { onConflict: "user_id,video_id" },
       );
 
       logger.info(
-        `Queued latest video for immediate delivery: ${latestTitle} (${latest.videoId})`,
+        `Queued latest video for immediate delivery: ${latestTitle} (${latestVideo.videoId})`,
       );
-
-      // Mark all older videos as skipped
-      if (older.length > 0) {
-        await Promise.all(
-          older.map((v) =>
-            supabase.from("processed_videos").upsert(
-              {
-                video_id: v.videoId,
-                channel_id: finalChannelId,
-                video_title: "[pre-subscription]",
-                video_url: `https://www.youtube.com/watch?v=${v.videoId}`,
-                status: "skipped",
-              },
-              { onConflict: "video_id", ignoreDuplicates: true },
-            ),
-          ),
-        );
-      }
+    } catch (e) {
+      logger.error("Failed to queue latest video:", e);
     }
-  } catch (e) {
-    logger.error("Failed to initialize channel videos:", e);
   }
 
   return NextResponse.json(data, { status: 201 });

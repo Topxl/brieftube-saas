@@ -8,6 +8,7 @@ FEATURE: P4 — Nouveau hero landing orienté bénéfice ("sans regarder une seu
 FEATURE: P5 — Reverse trial 14 jours Pro pour les nouveaux inscrits : migration Supabase trial_ends_at, banner countdown dashboard, statut "Pro trial · X days left"
 CHORE: Ajouter GEMINI_API_KEY à env.ts + @google/generative-ai
 CHORE: Régénérer les types Supabase (trial_ends_at dans profiles)
+FIX: Race condition à l'abonnement — marquer toutes les vidéos comme "skipped" avant d'insérer la subscription, pour éviter que le scanner crée des deliveries pour les vieilles vidéos
 FIX: Remove DATABASE_URL from env schema — Prisma removed, Supabase client used directly
 FIX: Use HTTP 303 redirect in Stripe checkout route to force GET and avoid CloudFront 403
 FIX: Use HTTP 303 redirect in Stripe portal route to avoid CloudFront 403
