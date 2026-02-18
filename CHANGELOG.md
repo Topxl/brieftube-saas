@@ -2,6 +2,9 @@
 
 ## 2026-02-19
 
+FIX: YouTube import during onboarding — callback now redirects to /onboarding instead of /dashboard/channels (which caused an infinite redirect loop); wizard detects youtube_imported param, fetches sources, and advances to step 2 automatically
+
+FIX: Onboarding wizard — suppress hydration warning caused by Dashlane extension injecting data-dashlane-* attributes on form/input/button
 FIX: CI — Remove missing global-teardown reference from playwright.config.ts (e2e/ dir doesn't exist yet)
 
 
