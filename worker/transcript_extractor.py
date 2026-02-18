@@ -132,7 +132,7 @@ class TranscriptExtractor:
                     logger.info(f"Using default transcript")
                 except Exception as e:
                     logger.error(f"Could not find any transcript: {e}")
-                    return None, None, "no_transcript_available"
+                    return None, None, "no_transcript_available", 0.0
 
             if transcript_data is None:
                 # YouTube transcripts not available - try Whisper fallback

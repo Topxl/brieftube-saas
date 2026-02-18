@@ -26,6 +26,9 @@ DEFAULT_TTS_VOICE = os.getenv("TTS_VOICE", "fr-FR-DeniseNeural")
 # RSS
 RSS_CHECK_INTERVAL = int(os.getenv("RSS_CHECK_INTERVAL", "300"))  # 5 minutes
 
+# Concurrent video processing (how many videos to process simultaneously)
+MAX_CONCURRENT_VIDEOS = int(os.getenv("MAX_CONCURRENT_VIDEOS", "3"))
+
 # App
 APP_URL = os.getenv("APP_URL", "https://brief-tube.com")
 

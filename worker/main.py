@@ -13,7 +13,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from config import RSS_CHECK_INTERVAL, TELEGRAM_BOT_TOKEN, SUPABASE_URL, ADMIN_TELEGRAM_CHAT_ID
+from config import RSS_CHECK_INTERVAL, TELEGRAM_BOT_TOKEN, SUPABASE_URL, ADMIN_TELEGRAM_CHAT_ID, MAX_CONCURRENT_VIDEOS
 from transcript_extractor import TranscriptExtractor
 from gemini_api import GeminiSummarizer
 from text_cleaner import clean_for_tts
@@ -84,174 +84,190 @@ async def rss_loop(alert_system: MonitoringAlert):
         await asyncio.sleep(RSS_CHECK_INTERVAL)
 
 
-# ── Loop 2: Gemini Processor ──────────────────────────────────
+# ── Processor: single video ────────────────────────────────────
+
+async def _process_video(
+    job: dict,
+    transcript_extractor: TranscriptExtractor,
+    gemini_summarizer: GeminiSummarizer,
+    alert_system: MonitoringAlert,
+) -> None:
+    """Process one video job: transcript → Gemini summary → TTS → upload → mark done."""
+    video_id = job["video_id"]
+    youtube_url = job["youtube_url"]
+    video_title = job.get("video_title", video_id)
+    start_time = datetime.now()
+
+    logger.info(f"[{video_id}] Processing: {video_title}")
+
+    try:
+        user_language = job.get("user_language", "fr")
+        tts_voice = job.get("tts_voice") or None
+
+        # Step 1: Extract transcript
+        logger.info(f"[{video_id}] Extracting transcript...")
+        transcript, source_lang, error, transcript_cost = await asyncio.to_thread(
+            transcript_extractor.get_transcript,
+            youtube_url,
+            preferred_languages=[user_language, 'fr', 'en']
+        )
+
+        if not transcript:
+            logger.error(f"[{video_id}] Transcript extraction failed: {error}")
+            if TranscriptExtractor.should_retry(error):
+                logger.info(f"[{video_id}] Will retry later")
+                db.fail_job(job["id"])
+            else:
+                raise Exception(f"Transcript extraction failed: {error}")
+            return
+
+        logger.info(
+            f"[{video_id}] Transcript: {len(transcript)} chars, "
+            f"lang: {source_lang}, cost: ${transcript_cost:.4f}"
+        )
+
+        # Step 2: Summarize
+        logger.info(f"[{video_id}] Generating summary...")
+        summary, summary_error = await asyncio.to_thread(
+            gemini_summarizer.summarize,
+            transcript=transcript,
+            source_language=source_lang,
+            target_language=user_language,
+            video_url=youtube_url
+        )
+
+        if not summary:
+            raise Exception(f"Summary generation failed: {summary_error}")
+
+        logger.info(f"[{video_id}] Summary: {len(summary)} chars")
+
+        # Step 3: Clean + TTS
+        clean_summary = clean_for_tts(summary)
+        logger.info(f"[{video_id}] Generating audio...")
+        audio_path = await text_to_audio(
+            clean_summary,
+            voice=tts_voice,
+            output_filename=f"video_{video_id}"
+        )
+
+        # Step 4: Upload to Supabase Storage
+        audio_url = ""
+        try:
+            sb = db.get_client()
+            with open(audio_path, "rb") as f:
+                storage_path = f"audio/{video_id}.mp3"
+                sb.storage.from_("audio").upload(
+                    storage_path,
+                    f.read(),
+                    {"content-type": "audio/mpeg", "upsert": "true"},
+                )
+            audio_url = sb.storage.from_("audio").get_public_url(storage_path)
+        except Exception as e:
+            logger.warning(f"[{video_id}] Storage upload failed (using local): {e}")
+            audio_url = str(audio_path)
+
+        # Step 5: Mark done
+        db.mark_video_completed(
+            video_id, summary, audio_url,
+            metadata={
+                "transcript_cost": transcript_cost,
+                "transcript_length": len(transcript),
+                "source_language": source_lang,
+                "summary_length": len(summary),
+            }
+        )
+        db.complete_job(job["id"])
+
+        processing_time = (datetime.now() - start_time).total_seconds()
+        stats.record_video_processed(processing_time)
+
+        logger.info(
+            f"✅ [{video_id}] Done: {video_title} "
+            f"(transcript: ${transcript_cost:.4f}, source: {source_lang}, "
+            f"summary: {len(summary)} chars, time: {processing_time:.1f}s)"
+        )
+        await alert_system.send_alert(
+            f"✅ **Video processed**\n\n"
+            f"Title: {video_title[:60]}\n"
+            f"Time: {processing_time:.1f}s | Cost: ${transcript_cost:.4f}",
+            level="SUCCESS"
+        )
+
+    except asyncio.TimeoutError:
+        logger.error(f"[{video_id}] Timeout")
+        db.fail_job(job["id"])
+        db.mark_video_failed(video_id)
+        stats.record_video_failed("Timeout", f"Timeout: {video_title}")
+        await alert_system.send_alert(f"⏱️ **Timeout**\n\n{video_title[:80]}", level="WARNING")
+
+    except Exception as e:
+        error_msg = str(e)
+        logger.error(f"[{video_id}] Error: {error_msg}")
+        db.fail_job(job["id"])
+        db.mark_video_failed(video_id)
+        stats.record_video_failed(type(e).__name__, error_msg)
+        await alert_system.send_alert(
+            f"🔴 **Error**\n\nVideo: {video_title[:60]}\nError: {error_msg[:100]}",
+            level="ERROR"
+        )
+
+
+# ── Loop 2: Gemini Processor (concurrent) ─────────────────────
+
+# Serialize job picking so concurrent tasks never grab the same row
+_pick_lock = asyncio.Lock()
+
 
 async def processor_loop(alert_system: MonitoringAlert):
-    """Pick jobs from processing_queue, transcribe, summarize, generate TTS."""
-    logger.info("Gemini Processor started")
+    """Pick jobs from processing_queue and process up to MAX_CONCURRENT_VIDEOS in parallel.
 
-    start_time = None
+    Uses an asyncio.Semaphore to cap concurrency and a Lock to make job
+    picking atomic, preventing two tasks from selecting the same row.
+    """
+    logger.info(f"Processor started ({MAX_CONCURRENT_VIDEOS} concurrent slots)")
 
-    # Initialize transcript extractor (with Groq fallback)
     transcript_extractor = TranscriptExtractor(enable_whisper_fallback=True)
     logger.info("Transcript extractor ready (YouTube + Groq fallback)")
 
-    # Initialize Gemini API summarizer
     try:
         gemini_summarizer = GeminiSummarizer()
-        logger.info("Gemini 3 API summarizer ready")
+        logger.info("Gemini summarizer ready")
     except ValueError as e:
-        logger.error(f"Failed to initialize Gemini API: {e}")
+        logger.error(f"Failed to initialize Gemini: {e}")
         return
+
+    # Semaphore: at most MAX_CONCURRENT_VIDEOS tasks running at once
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_VIDEOS)
 
     while True:
         try:
-            job = db.pick_next_job()
+            # Block here until a processing slot is free
+            await semaphore.acquire()
+
+            # Serialize job picking — prevents two concurrent tasks picking the same row
+            async with _pick_lock:
+                job = await asyncio.to_thread(db.pick_next_job)
+
             if not job:
+                semaphore.release()
                 await asyncio.sleep(10)
                 continue
 
-            video_id = job["video_id"]
-            youtube_url = job["youtube_url"]
-            video_title = job.get("video_title", video_id)
-            logger.info(f"Processing: {video_title}")
-
-            start_time = datetime.now()
-
-            try:
-                # Get user preferences (language, voice)
-                user_language = job.get("user_language", "fr")
-                tts_voice = job.get("tts_voice") or None
-
-                # Step 1: Extract transcript (YouTube transcripts + Groq fallback)
-                logger.info(f"[{video_id}] Extracting transcript...")
-                transcript, source_lang, error, transcript_cost = await asyncio.to_thread(
-                    transcript_extractor.get_transcript,
-                    youtube_url,
-                    preferred_languages=[user_language, 'fr', 'en']
-                )
-
-                if not transcript:
-                    logger.error(f"[{video_id}] Transcript extraction failed: {error}")
-
-                    # Check if should retry later
-                    if TranscriptExtractor.should_retry(error):
-                        logger.info(f"[{video_id}] Will retry later")
-                        db.requeue_job(job["id"])  # Requeue for retry
-                    else:
-                        raise Exception(f"Transcript extraction failed: {error}")
-                    continue
-
-                logger.info(
-                    f"[{video_id}] Transcript extracted: {len(transcript)} chars, "
-                    f"lang: {source_lang}, cost: ${transcript_cost:.4f}"
-                )
-
-                # Step 2: Summarize with Gemini 3 API (and translate if needed)
-                logger.info(f"[{video_id}] Generating summary with Gemini 3...")
-                summary, summary_error = await asyncio.to_thread(
-                    gemini_summarizer.summarize,
-                    transcript=transcript,
-                    source_language=source_lang,
-                    target_language=user_language,
-                    video_url=youtube_url
-                )
-
-                if not summary:
-                    raise Exception(f"Summary generation failed: {summary_error}")
-
-                logger.info(f"[{video_id}] Summary generated: {len(summary)} chars")
-
-                # Step 3: Clean summary for TTS (remove Markdown)
-                clean_summary = clean_for_tts(summary)
-                logger.info(f"[{video_id}] Text cleaned: {len(summary)} → {len(clean_summary)} chars")
-
-                # Step 4: Generate TTS audio
-                logger.info(f"[{video_id}] Generating audio...")
-                audio_path = await text_to_audio(
-                    clean_summary,
-                    voice=tts_voice,
-                    output_filename=f"video_{video_id}"
-                )
-
-                # Upload audio to Supabase Storage
-                audio_url = ""
+            # Dispatch to a background task; semaphore released when done
+            async def _do(j: dict) -> None:
                 try:
-                    sb = db.get_client()
-                    with open(audio_path, "rb") as f:
-                        storage_path = f"audio/{video_id}.mp3"
-                        sb.storage.from_("audio").upload(
-                            storage_path,
-                            f.read(),
-                            {"content-type": "audio/mpeg", "upsert": "true"},
-                        )
-                    audio_url = sb.storage.from_("audio").get_public_url(storage_path)
-                except Exception as e:
-                    logger.warning(f"Storage upload failed (using local): {e}")
-                    audio_url = str(audio_path)
+                    await _process_video(j, transcript_extractor, gemini_summarizer, alert_system)
+                finally:
+                    semaphore.release()
 
-                # Mark video as completed (save transcript cost for analytics)
-                db.mark_video_completed(
-                    video_id,
-                    summary,
-                    audio_url,
-                    metadata={
-                        "transcript_cost": transcript_cost,
-                        "transcript_length": len(transcript),
-                        "source_language": source_lang,
-                        "summary_length": len(summary)
-                    }
-                )
-                db.complete_job(job["id"])
-
-                # Calculate processing time
-                processing_time = (datetime.now() - start_time).total_seconds() if start_time else 0
-                stats.record_video_processed(processing_time)
-
-                logger.info(
-                    f"✅ Completed: {video_title} "
-                    f"(transcript: ${transcript_cost:.4f}, "
-                    f"source: {source_lang}, summary: {len(summary)} chars)"
-                )
-
-                # Send success alert
-                await alert_system.send_alert(
-                    f"✅ **Video processed**\n\n"
-                    f"Title: {video_title[:60]}...\n"
-                    f"Time: {processing_time:.1f}s\n"
-                    f"Cost: ${transcript_cost:.4f}",
-                    level="SUCCESS"
-                )
-
-                # Small delay between videos
-                await asyncio.sleep(5)
-
-            except asyncio.TimeoutError:
-                logger.error(f"Timeout processing: {video_title}")
-                db.fail_job(job["id"])
-                db.mark_video_failed(video_id)
-                stats.record_video_failed("Timeout", f"Timeout: {video_title}")
-                await alert_system.send_alert(
-                    f"⏱️ **Timeout**\n\n{video_title[:80]}",
-                    level="WARNING"
-                )
-
-            except Exception as e:
-                error_msg = str(e)
-                logger.error(f"Error processing {video_title}: {error_msg}")
-                db.fail_job(job["id"])
-                db.mark_video_failed(video_id)
-                stats.record_video_failed(type(e).__name__, error_msg)
-                await alert_system.send_alert(
-                    f"🔴 **Processing Error**\n\n"
-                    f"Video: {video_title[:60]}...\n"
-                    f"Error: {error_msg[:100]}",
-                    level="ERROR"
-                )
-                await asyncio.sleep(5)
+            asyncio.create_task(_do(job))
 
         except Exception as e:
             logger.error(f"Processor loop error: {e}")
+            try:
+                semaphore.release()
+            except ValueError:
+                pass
             await asyncio.sleep(10)
 
 

@@ -59,15 +59,21 @@ export type Database = {
           created_at: string | null;
           failure_count: number | null;
           id: string;
+          metadata: Json | null;
           processed_at: string | null;
+          retry_at: string | null;
+          retry_count: number | null;
+          source_language: string | null;
           status: string | null;
           summary: string | null;
+          summary_length: number | null;
+          transcript_cost: number | null;
+          transcript_length: number | null;
+          transcript_source: string | null;
+          transcript_status: string | null;
           video_id: string;
           video_title: string | null;
           video_url: string | null;
-          transcript_source: string | null;
-          source_language: string | null;
-          summary_length: number | null;
         };
         Insert: {
           audio_url?: string | null;
@@ -75,15 +81,21 @@ export type Database = {
           created_at?: string | null;
           failure_count?: number | null;
           id?: string;
+          metadata?: Json | null;
           processed_at?: string | null;
+          retry_at?: string | null;
+          retry_count?: number | null;
+          source_language?: string | null;
           status?: string | null;
           summary?: string | null;
+          summary_length?: number | null;
+          transcript_cost?: number | null;
+          transcript_length?: number | null;
+          transcript_source?: string | null;
+          transcript_status?: string | null;
           video_id: string;
           video_title?: string | null;
           video_url?: string | null;
-          transcript_source?: string | null;
-          source_language?: string | null;
-          summary_length?: number | null;
         };
         Update: {
           audio_url?: string | null;
@@ -91,15 +103,21 @@ export type Database = {
           created_at?: string | null;
           failure_count?: number | null;
           id?: string;
+          metadata?: Json | null;
           processed_at?: string | null;
+          retry_at?: string | null;
+          retry_count?: number | null;
+          source_language?: string | null;
           status?: string | null;
           summary?: string | null;
+          summary_length?: number | null;
+          transcript_cost?: number | null;
+          transcript_length?: number | null;
+          transcript_source?: string | null;
+          transcript_status?: string | null;
           video_id?: string;
           video_title?: string | null;
           video_url?: string | null;
-          transcript_source?: string | null;
-          source_language?: string | null;
-          summary_length?: number | null;
         };
         Relationships: [];
       };
@@ -116,6 +134,8 @@ export type Database = {
           priority: number | null;
           started_at: string | null;
           status: string | null;
+          tts_voice: string | null;
+          user_language: string | null;
           video_id: string;
           video_title: string | null;
           worker_id: string | null;
@@ -133,6 +153,8 @@ export type Database = {
           priority?: number | null;
           started_at?: string | null;
           status?: string | null;
+          tts_voice?: string | null;
+          user_language?: string | null;
           video_id: string;
           video_title?: string | null;
           worker_id?: string | null;
@@ -150,6 +172,8 @@ export type Database = {
           priority?: number | null;
           started_at?: string | null;
           status?: string | null;
+          tts_voice?: string | null;
+          user_language?: string | null;
           video_id?: string;
           video_title?: string | null;
           worker_id?: string | null;
@@ -163,6 +187,8 @@ export type Database = {
           email: string;
           id: string;
           max_channels: number | null;
+          onboarding_completed: boolean | null;
+          preferred_language: string | null;
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
           subscription_status: string | null;
@@ -178,6 +204,8 @@ export type Database = {
           email: string;
           id: string;
           max_channels?: number | null;
+          onboarding_completed?: boolean | null;
+          preferred_language?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           subscription_status?: string | null;
@@ -193,6 +221,8 @@ export type Database = {
           email?: string;
           id?: string;
           max_channels?: number | null;
+          onboarding_completed?: boolean | null;
+          preferred_language?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           subscription_status?: string | null;
@@ -213,6 +243,7 @@ export type Database = {
           channel_name: string;
           created_at: string | null;
           id: string;
+          source_type: string | null;
           user_id: string;
         };
         Insert: {
@@ -222,6 +253,7 @@ export type Database = {
           channel_name: string;
           created_at?: string | null;
           id?: string;
+          source_type?: string | null;
           user_id: string;
         };
         Update: {
@@ -231,6 +263,7 @@ export type Database = {
           channel_name?: string;
           created_at?: string | null;
           id?: string;
+          source_type?: string | null;
           user_id?: string;
         };
         Relationships: [
@@ -244,7 +277,20 @@ export type Database = {
         ];
       };
     };
-    Views: Record<never, never>;
+    Views: {
+      transcript_cost_analytics: {
+        Row: {
+          avg_cost: number | null;
+          date: string | null;
+          groq_count: number | null;
+          total_chars: number | null;
+          total_cost: number | null;
+          total_videos: number | null;
+          youtube_count: number | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: Record<never, never>;
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;

@@ -120,33 +120,25 @@ export async function POST(request: NextRequest) {
     hasAvatar: !!finalAvatarUrl,
   });
 
-  // Check user's profile for max_channels limit
+  // Check user's profile for max active channels limit
   const { data: profile } = await supabase
     .from("profiles")
     .select("max_channels, subscription_status")
     .eq("id", user.id)
     .single();
 
-  // Count current subscriptions
-  const { count } = await supabase
+  // Count currently active subscriptions
+  const { count: activeCount } = await supabase
     .from("subscriptions")
     .select("*", { count: "exact", head: true })
     .eq("user_id", user.id)
     .eq("active", true);
 
-  const maxChannels = profile?.max_channels ?? 5;
+  const maxActiveChannels = profile?.max_channels ?? 3;
   const isPro = profile?.subscription_status === "active";
 
-  // Check limit (5 for free, unlimited for pro)
-  if (!isPro && (count ?? 0) >= maxChannels) {
-    return NextResponse.json(
-      {
-        error: "Channel limit reached",
-        message: `You have reached the limit of ${maxChannels} channels. Upgrade to Pro for unlimited channels.`,
-      },
-      { status: 403 },
-    );
-  }
+  // Free users can always add channels, but active is limited to maxActiveChannels
+  const shouldBeActive = isPro || (activeCount ?? 0) < maxActiveChannels;
 
   // Check if already subscribed (using original channelId before YouTube fetch)
   const { data: existing } = await supabase
@@ -219,6 +211,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Add subscription with real YouTube data
+  // active = false if free user already has maxActiveChannels active
   const { data, error } = await supabase
     .from("subscriptions")
     .insert({
@@ -226,7 +219,7 @@ export async function POST(request: NextRequest) {
       channel_id: finalChannelId,
       channel_name: finalChannelName,
       channel_avatar_url: finalAvatarUrl,
-      active: true,
+      active: shouldBeActive,
     })
     .select()
     .single();
@@ -235,53 +228,144 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Aha moment: upgrade the latest video from "skipped" to "pending" and queue it
+  // Aha moment: deliver the latest video — reuse if already processed, queue if not
   if (latestVideo) {
     try {
       const latestTitle = latestVideo.title ?? latestVideo.videoId;
       const latestUrl = `https://www.youtube.com/watch?v=${latestVideo.videoId}`;
 
-      // Overwrite status to "pending" (no ignoreDuplicates — we want to update it)
-      await supabase.from("processed_videos").upsert(
-        {
-          video_id: latestVideo.videoId,
-          channel_id: finalChannelId,
-          video_title: latestTitle,
-          video_url: latestUrl,
-          status: "pending",
-        },
-        { onConflict: "video_id" },
-      );
+      // Check current status — never downgrade a completed/in-progress video back to "pending"
+      const { data: existingLatest } = await supabase
+        .from("processed_videos")
+        .select("status")
+        .eq("video_id", latestVideo.videoId)
+        .maybeSingle();
 
-      await supabase.from("processing_queue").upsert(
-        {
-          video_id: latestVideo.videoId,
-          youtube_url: latestUrl,
-          video_title: latestTitle,
-          channel_id: finalChannelId,
-          status: "queued",
-        },
-        { onConflict: "video_id", ignoreDuplicates: true },
-      );
+      const existingStatus = existingLatest?.status;
 
-      await supabase.from("deliveries").upsert(
-        {
-          user_id: user.id,
-          video_id: latestVideo.videoId,
-          status: "pending",
-        },
-        { onConflict: "user_id,video_id" },
-      );
+      if (
+        existingStatus === "completed" ||
+        existingStatus === "pending" ||
+        existingStatus === "processing"
+      ) {
+        // Already processed or in progress — just create the delivery, no reprocessing
+        await supabase.from("deliveries").upsert(
+          {
+            user_id: user.id,
+            video_id: latestVideo.videoId,
+            status: "pending",
+          },
+          { onConflict: "user_id,video_id" },
+        );
+        logger.info(
+          `Latest video already ${existingStatus}, delivery created directly: ${latestVideo.videoId}`,
+        );
+      } else {
+        // "skipped" or absent — upgrade to pending and queue
+        await supabase.from("processed_videos").upsert(
+          {
+            video_id: latestVideo.videoId,
+            channel_id: finalChannelId,
+            video_title: latestTitle,
+            video_url: latestUrl,
+            status: "pending",
+          },
+          { onConflict: "video_id" },
+        );
 
-      logger.info(
-        `Queued latest video for immediate delivery: ${latestTitle} (${latestVideo.videoId})`,
-      );
+        await supabase.from("processing_queue").upsert(
+          {
+            video_id: latestVideo.videoId,
+            youtube_url: latestUrl,
+            video_title: latestTitle,
+            channel_id: finalChannelId,
+            status: "queued",
+          },
+          { onConflict: "video_id", ignoreDuplicates: true },
+        );
+
+        await supabase.from("deliveries").upsert(
+          {
+            user_id: user.id,
+            video_id: latestVideo.videoId,
+            status: "pending",
+          },
+          { onConflict: "user_id,video_id" },
+        );
+
+        logger.info(
+          `Queued latest video for immediate delivery: ${latestTitle} (${latestVideo.videoId})`,
+        );
+      }
     } catch (e) {
-      logger.error("Failed to queue latest video:", e);
+      logger.error("Failed to deliver latest video:", e);
     }
   }
 
   return NextResponse.json(data, { status: 201 });
+}
+
+// PATCH /api/subscriptions - Toggle active status for a subscription
+export async function PATCH(request: NextRequest) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = (await request.json()) as { id: string; active: boolean };
+  const { id, active } = body;
+
+  if (!id || typeof active !== "boolean") {
+    return NextResponse.json(
+      { error: "id and active are required" },
+      { status: 400 },
+    );
+  }
+
+  // If activating, check the active channel limit
+  if (active) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("max_channels, subscription_status")
+      .eq("id", user.id)
+      .single();
+
+    const isPro = profile?.subscription_status === "active";
+    const maxActiveChannels = profile?.max_channels ?? 3;
+
+    if (!isPro) {
+      const { count } = await supabase
+        .from("subscriptions")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("active", true);
+
+      if ((count ?? 0) >= maxActiveChannels) {
+        return NextResponse.json(
+          { error: "Active channel limit reached", maxActiveChannels },
+          { status: 403 },
+        );
+      }
+    }
+  }
+
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .update({ active })
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json(data);
 }
 
 // DELETE /api/subscriptions - Remove YouTube channel subscription

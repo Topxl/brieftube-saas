@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     logger.error("YouTube OAuth error:", error);
     return NextResponse.redirect(
-      new URL("/dashboard/channels?youtube_error=access_denied", baseUrl),
+      new URL("/onboarding?youtube_error=access_denied", baseUrl),
     );
   }
 
@@ -94,13 +94,13 @@ export async function GET(request: NextRequest) {
 
   if (!state || state !== savedState) {
     return NextResponse.redirect(
-      new URL("/dashboard/channels?youtube_error=invalid_state", baseUrl),
+      new URL("/onboarding?youtube_error=invalid_state", baseUrl),
     );
   }
 
   if (!code) {
     return NextResponse.redirect(
-      new URL("/dashboard/channels?youtube_error=no_code", baseUrl),
+      new URL("/onboarding?youtube_error=no_code", baseUrl),
     );
   }
 
@@ -143,40 +143,40 @@ export async function GET(request: NextRequest) {
       .select("max_channels, subscription_status")
       .eq("id", user.id)
       .single(),
-    supabase.from("subscriptions").select("channel_id").eq("user_id", user.id),
+    supabase
+      .from("subscriptions")
+      .select("channel_id, active")
+      .eq("user_id", user.id),
     fetchAllSubscriptions(access_token),
   ]);
 
   const profile = profileRes.data;
   const isPro = profile?.subscription_status === "active";
-  const maxChannels = profile?.max_channels ?? 5;
-  const existingCount = existingSubsRes.data?.length ?? 0;
+  const maxActiveChannels = profile?.max_channels ?? 3;
+  const existingActiveCount = (existingSubsRes.data ?? []).filter(
+    (s) => s.active,
+  ).length;
+  // How many active slots are still available
   const slotsAvailable = isPro
     ? Infinity
-    : Math.max(0, maxChannels - existingCount);
-
-  if (slotsAvailable === 0) {
-    return NextResponse.redirect(
-      new URL("/dashboard/channels?youtube_error=limit_reached", baseUrl),
-    );
-  }
+    : Math.max(0, maxActiveChannels - existingActiveCount);
 
   logger.info(`Fetched ${youtubeChannels.length} YouTube subscriptions`);
 
-  // Filter out already-subscribed channels
+  // Filter out already-subscribed channels (active or inactive)
   const existingChannelIds = new Set(
     (existingSubsRes.data ?? []).map((s) => s.channel_id),
   );
 
+  // Import ALL non-duplicate channels; only mark active for available slots
   const toImport = youtubeChannels
     .filter((c) => !existingChannelIds.has(c.channelId))
-    .slice(0, isPro ? undefined : slotsAvailable)
-    .map((c) => ({
+    .map((c, index) => ({
       user_id: user.id,
       channel_id: c.channelId,
       channel_name: c.channelName,
       channel_avatar_url: c.avatarUrl,
-      active: true,
+      active: isPro || index < slotsAvailable,
     }));
 
   const skipped = youtubeChannels.length - toImport.length;
@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
   if (insertError) {
     logger.error("Bulk insert failed:", insertError);
     return NextResponse.redirect(
-      new URL("/dashboard/channels?youtube_error=import_failed", baseUrl),
+      new URL("/onboarding?youtube_error=import_failed", baseUrl),
     );
   }
 
@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.redirect(
     new URL(
-      `/dashboard/channels?youtube_imported=${imported}&youtube_skipped=${skipped}`,
+      `/onboarding?youtube_imported=${imported}&youtube_skipped=${skipped}`,
       baseUrl,
     ),
   );

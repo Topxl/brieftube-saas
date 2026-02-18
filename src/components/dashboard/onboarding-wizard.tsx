@@ -248,7 +248,11 @@ export function OnboardingWizard({ initialVoice }: Props) {
               {sources.map((source) => (
                 <div
                   key={source.id}
-                  className="flex items-center gap-3 rounded-xl border border-emerald-500/15 bg-emerald-500/[0.04] px-3 py-2.5"
+                  className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${
+                    source.active
+                      ? "border-emerald-500/15 bg-emerald-500/[0.04]"
+                      : "border-white/[0.06] bg-white/[0.02] opacity-60"
+                  }`}
                 >
                   {source.channel_avatar_url ? (
                     <Image
@@ -266,7 +270,13 @@ export function OnboardingWizard({ initialVoice }: Props) {
                   <span className="min-w-0 flex-1 truncate text-sm font-medium">
                     {source.channel_name}
                   </span>
-                  <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+                  {source.active ? (
+                    <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+                  ) : (
+                    <span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
+                      Paused
+                    </span>
+                  )}
                 </div>
               ))}
             </div>

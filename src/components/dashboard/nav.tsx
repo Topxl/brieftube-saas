@@ -4,13 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import {
-  LayoutDashboard,
-  Tv,
-  Settings,
-  CreditCard,
-  LogOut,
-} from "lucide-react";
+import { LayoutDashboard, CreditCard, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,9 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const navItems = [
-  { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Channels", href: "/dashboard/channels", icon: Tv },
-  { label: "Settings", href: "/dashboard/settings", icon: Settings },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
 ];
 

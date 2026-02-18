@@ -19,11 +19,12 @@ class GeminiSummarizer:
     """
 
     # Available models (ordered by preference)
+    # Verify latest model names at: https://aistudio.google.com
     MODELS = [
-        "gemini-3-flash-preview",  # Latest, fastest
-        "gemini-3-pro-preview",    # Latest, most capable
+        "gemini-3-flash-preview",  # Confirmed working
+        "gemini-3-pro-preview",    # Higher quality (slower)
         "gemini-2.5-flash",        # Fallback
-        "gemini-2.5-pro",          # Fallback pro
+        "gemini-2.0-flash",        # Stable fallback
     ]
 
     # Language names for prompts
@@ -92,53 +93,53 @@ class GeminiSummarizer:
         # Build the prompt
         target_lang_name = self._get_language_name(target_language)
 
-        # Determine target summary length based on transcript length
+        # Determine target summary length based on transcript length.
+        # Never ask for MORE words than the original — that forces hallucination.
         transcript_words = len(transcript.split())
 
-        # Rule: Summary should be 30-60% of original for long content,
-        # or 50-80% for short content (minimum 100 words for very short videos)
-        if transcript_words < 200:
-            min_words = max(100, int(transcript_words * 0.5))
-            max_words = int(transcript_words * 1.5)
-            length_guidance = f"environ {min_words}-{max_words} mots (vidéo courte)"
+        if transcript_words < 150:
+            # Very short video — keep 60-80% of original, never exceed it
+            min_words = max(30, int(transcript_words * 0.6))
+            max_words = int(transcript_words * 0.9)
+            length_guidance = f"environ {min_words}-{max_words} mots"
         elif transcript_words < 500:
             min_words = int(transcript_words * 0.4)
-            max_words = int(transcript_words * 0.8)
+            max_words = int(transcript_words * 0.7)
             length_guidance = f"environ {min_words}-{max_words} mots"
         else:
-            min_words = int(transcript_words * 0.3)
-            max_words = int(transcript_words * 0.6)
+            min_words = int(transcript_words * 0.25)
+            max_words = int(transcript_words * 0.5)
             length_guidance = f"environ {min_words}-{max_words} mots"
 
-        # Create context-aware prompt
-        prompt_parts = []
-
-        if video_url:
-            prompt_parts.append(f"Vidéo YouTube: {video_url}\n")
-
+        # Build prompt — no video URL: providing it lets Gemini use its training
+        # knowledge about the video instead of strictly following the transcript.
         if source_language and source_language != target_language:
             source_lang_name = self._get_language_name(source_language)
-            prompt_parts.append(
-                f"La transcription ci-dessous est en {source_lang_name}. "
-                f"Tu dois créer un résumé concis en {target_lang_name}.\n\n"
+            intro = (
+                f"Tu es un assistant qui résume des vidéos YouTube.\n"
+                f"La transcription ci-dessous provient d'une vidéo en {source_lang_name}.\n"
+                f"Tu dois produire un résumé en {target_lang_name}.\n\n"
             )
         else:
-            prompt_parts.append(
-                f"Tu dois créer un résumé concis en {target_lang_name} de la transcription ci-dessous.\n\n"
+            intro = (
+                f"Tu es un assistant qui résume des vidéos YouTube.\n"
+                f"Produis un résumé en {target_lang_name} de la transcription ci-dessous.\n\n"
             )
 
-        prompt_parts.append(
-            "Instructions:\n"
-            f"1. Fais un résumé concis de {length_guidance}\n"
-            "2. Va à l'essentiel : capture les points clés et idées principales\n"
-            "3. Garde les informations importantes mais évite les répétitions\n"
-            "4. Utilise un ton naturel et engageant\n"
-            f"5. Le résumé DOIT être en {target_lang_name}\n"
-            "6. IMPORTANT: Le résumé doit être PLUS COURT que la transcription originale\n\n"
-            "Transcription:\n"
-            f"{transcript}\n\n"
-            f"Résumé concis en {target_lang_name} ({length_guidance}):"
-        )
+        prompt_parts = [
+            intro,
+            "RÈGLE ABSOLUE : base-toi UNIQUEMENT sur la transcription fournie. "
+            "N'utilise aucune connaissance externe sur cette vidéo ou ce sujet. "
+            "Si la transcription est ambiguë ou incomplète, résume ce qui est présent sans inventer.\n\n"
+            "Instructions :\n"
+            f"1. Résumé de {length_guidance} — ne dépasse pas cette limite\n"
+            "2. Capture les points clés et idées principales de la transcription\n"
+            "3. Évite les répétitions et le remplissage\n"
+            "4. Ton naturel et direct, adapté à une écoute audio\n"
+            f"5. Langue : {target_lang_name} obligatoire\n\n"
+            f"Transcription :\n{transcript}\n\n"
+            f"Résumé en {target_lang_name} ({length_guidance}) :"
+        ]
 
         prompt = "".join(prompt_parts)
 
