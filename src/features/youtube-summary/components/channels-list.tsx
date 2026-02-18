@@ -22,10 +22,8 @@ export function ChannelsList({
     setDeleting(id);
 
     try {
-      const response = await fetch("/api/brieftube/subscriptions", {
+      const response = await fetch(`/api/subscriptions?id=${id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
       });
 
       if (!response.ok) {

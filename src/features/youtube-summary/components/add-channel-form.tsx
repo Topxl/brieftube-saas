@@ -52,7 +52,7 @@ export function AddChannelForm({ onSuccess }: { onSuccess: () => void }) {
     try {
       const { channelId, channelName } = extractChannelInfo(channelUrl);
 
-      const response = await fetch("/api/brieftube/subscriptions", {
+      const response = await fetch("/api/subscriptions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -1,15 +1,14 @@
-import GridBackground from "@/components/nowts/grid-background";
-import { Error401 } from "@/features/page/error-401";
-import type { PropsWithChildren } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-const SQUARE_SIZE = 20;
-const SQUARE_COLOR = "color-mix(in srgb, var(--muted) 50%, transparent)";
-
-export default function RouteLayout(props: PropsWithChildren) {
+export default function Unauthorized() {
   return (
-    <div className="flex min-h-full items-center justify-center">
-      <GridBackground color={SQUARE_COLOR} size={SQUARE_SIZE} />
-      <Error401 />
+    <div className="flex min-h-screen flex-col items-center justify-center">
+      <h1 className="text-4xl font-bold">401</h1>
+      <p className="text-muted-foreground mt-2">Unauthorized</p>
+      <Button asChild className="mt-6">
+        <Link href="/login">Sign In</Link>
+      </Button>
     </div>
   );
 }

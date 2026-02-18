@@ -1,21 +1,13 @@
-import { AUTH_PLANS } from "@/lib/auth/stripe/auth-plans";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe";
 import { headers } from "next/headers";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
+
 export const maxDuration = 300;
-
-// Utility function to get plan from subscription metadata
-const getPlanFromSubscription = (subscription: Stripe.Subscription) => {
-  const planName = subscription.items.data[0].price.metadata.plan;
-  if (!planName) return null;
-
-  return AUTH_PLANS.find((p) => p.name === planName);
-};
 
 export const POST = async (req: NextRequest) => {
   const headerList = await headers();
@@ -41,16 +33,16 @@ export const POST = async (req: NextRequest) => {
   try {
     switch (event.type) {
       case "checkout.session.completed":
-        await checkoutSessionCompleted(event.data.object, req);
+        await checkoutSessionCompleted(event.data.object);
         break;
       case "customer.subscription.updated":
-        await customerSubscriptionUpdated(event.data.object, req);
+        await customerSubscriptionUpdated(event.data.object);
         break;
       case "customer.subscription.deleted":
-        await customerSubscriptionDeleted(event.data.object, req);
+        await customerSubscriptionDeleted(event.data.object);
         break;
       default:
-        logger.error(`Unhandled event type: ${event.type}`);
+        logger.info(`Unhandled event type: ${event.type}`);
         break;
     }
   } catch (error) {
@@ -68,7 +60,6 @@ export const POST = async (req: NextRequest) => {
 
 const checkoutSessionCompleted = async (
   sessionData: Stripe.Checkout.Session,
-  req: NextRequest,
 ) => {
   const session = sessionData;
 
@@ -86,220 +77,116 @@ const checkoutSessionCompleted = async (
       ? session.subscription
       : session.subscription.id;
 
-  // Find organization by Stripe customer ID
-  const organization = await prisma.organization.findFirst({
-    where: { stripeCustomerId: customerId },
-    include: {
-      members: {
-        include: {
-          user: true,
-        },
-      },
-    },
-  });
+  const supabase = await createClient();
 
-  if (!organization) {
-    logger.error(`Organization not found for customer ID: ${customerId}`);
+  // Find user by Stripe customer ID
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, email")
+    .eq("stripe_customer_id", customerId)
+    .single();
+
+  if (!profile) {
+    logger.error(`User not found for customer ID: ${customerId}`);
     return;
   }
 
-  // Get the subscription from Stripe to get the price details
+  // Get the subscription from Stripe
   const stripeSubscription =
     await stripe.subscriptions.retrieve(subscriptionId);
-  const priceId = stripeSubscription.items.data[0]?.price.id;
 
-  if (!priceId) {
-    logger.error(`No price ID found for subscription: ${subscriptionId}`);
-    return;
-  }
-
-  // Get plan from subscription metadata
-  const plan = getPlanFromSubscription(stripeSubscription);
-  if (!plan) {
-    logger.error(`Plan not found in subscription metadata: ${subscriptionId}`);
-    return;
-  }
-
-  // Create or update subscription
-  const existingSubscription = await prisma.subscription.findFirst({
-    where: { referenceId: organization.id },
+  logger.info("Checkout session completed", {
+    userId: profile.id,
+    email: profile.email,
+    subscriptionId,
+    status: stripeSubscription.status,
   });
 
-  let dbSubscription;
-  if (existingSubscription) {
-    dbSubscription = await prisma.subscription.update({
-      where: { id: existingSubscription.id },
-      data: {
-        plan: plan.name,
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: subscriptionId,
-        status: stripeSubscription.status,
-        periodStart: new Date(
-          stripeSubscription.items.data[0].current_period_start * 1000,
-        ),
-        periodEnd: new Date(
-          stripeSubscription.items.data[0].current_period_end * 1000,
-        ),
-        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
-        seats: stripeSubscription.items.data[0]?.quantity ?? 1,
-      },
-    });
-  } else {
-    dbSubscription = await prisma.subscription.create({
-      data: {
-        id: `sub_${Date.now()}`,
-        plan: plan.name,
-        referenceId: organization.id,
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: subscriptionId,
-        status: stripeSubscription.status,
-        periodStart: new Date(
-          stripeSubscription.items.data[0].current_period_start * 1000,
-        ),
-        periodEnd: new Date(
-          stripeSubscription.items.data[0].current_period_end * 1000,
-        ),
-        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
-        seats: stripeSubscription.items.data[0]?.quantity ?? 1,
-      },
-    });
-  }
+  // Update user profile with subscription info
+  await supabase
+    .from("profiles")
+    .update({
+      stripe_subscription_id: subscriptionId,
+      subscription_status: stripeSubscription.status,
+    })
+    .eq("id", profile.id);
 
-  // Call onTrialStart if this is a trial subscription
-  if (
-    stripeSubscription.status === "trialing" &&
-    plan.freeTrial?.onTrialStart
-  ) {
-    await plan.freeTrial.onTrialStart(dbSubscription, {
-      req,
-      organizationId: organization.id,
-      stripeCustomerId: customerId,
-      subscriptionId: subscriptionId,
-    });
-  }
-
-  logger.info(
-    `Subscription created/updated for organization: ${organization.id}, plan: ${plan.name}`,
-  );
+  logger.info(`Subscription activated for user: ${profile.id}`);
 };
 
 const customerSubscriptionUpdated = async (
   subscriptionData: Stripe.Subscription,
-  req: NextRequest,
 ) => {
   const subscription = subscriptionData;
 
   logger.info("Processing customer.subscription.updated:", subscription.id);
 
-  // Find the subscription in our database
-  const dbSubscription = await prisma.subscription.findFirst({
-    where: { stripeSubscriptionId: subscription.id },
-  });
+  const customerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : subscription.customer.id;
 
-  if (!dbSubscription) {
-    logger.error(`Subscription not found in database: ${subscription.id}`);
+  const supabase = await createClient();
+
+  // Find user by Stripe customer ID
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("stripe_customer_id", customerId)
+    .single();
+
+  if (!profile) {
+    logger.error(`User not found for customer ID: ${customerId}`);
     return;
   }
 
-  // Get plan from subscription metadata
-  const plan = getPlanFromSubscription(subscription);
-  const planName = plan?.name ?? dbSubscription.plan; // Keep current plan as fallback
-
-  // Update subscription details
-  const updatedSubscription = await prisma.subscription.update({
-    where: { id: dbSubscription.id },
-    data: {
-      plan: planName,
-      status: subscription.status,
-      periodStart: new Date(
-        subscription.items.data[0].current_period_start * 1000,
-      ),
-      periodEnd: new Date(subscription.items.data[0].current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
-      seats: subscription.items.data[0]?.quantity ?? dbSubscription.seats ?? 1,
-    },
-  });
-
-  // Handle trial transitions
-  if (plan?.freeTrial) {
-    // Trial ended and became active
-    if (
-      subscription.status === "active" &&
-      dbSubscription.status === "trialing" &&
-      plan.freeTrial.onTrialEnd
-    ) {
-      await plan.freeTrial.onTrialEnd(
-        { subscription: updatedSubscription },
-        {
-          req,
-          organizationId: updatedSubscription.referenceId,
-          stripeCustomerId: subscription.customer as string,
-          subscriptionId: subscription.id,
-        },
-      );
-    }
-
-    // Trial expired
-    if (
-      subscription.status === "incomplete_expired" &&
-      dbSubscription.status === "trialing" &&
-      plan.freeTrial.onTrialExpired
-    ) {
-      await plan.freeTrial.onTrialExpired(updatedSubscription, {
-        req,
-        organizationId: updatedSubscription.referenceId,
-        stripeCustomerId: subscription.customer as string,
-        subscriptionId: subscription.id,
-      });
-    }
-  }
+  // Update subscription status
+  await supabase
+    .from("profiles")
+    .update({
+      subscription_status: subscription.status,
+    })
+    .eq("id", profile.id);
 
   logger.info(
-    `Subscription updated: ${subscription.id}, status: ${subscription.status}, plan: ${planName}`,
+    `Subscription updated: ${subscription.id}, status: ${subscription.status}`,
   );
 };
 
 const customerSubscriptionDeleted = async (
   subscriptionData: Stripe.Subscription,
-  req: NextRequest,
 ) => {
   const subscription = subscriptionData;
 
   logger.info("Processing customer.subscription.deleted:", subscription.id);
 
-  // Find and update the subscription status
-  const dbSubscription = await prisma.subscription.findFirst({
-    where: { stripeSubscriptionId: subscription.id },
-  });
+  const customerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : subscription.customer.id;
 
-  if (!dbSubscription) {
-    logger.error(`Subscription not found in database: ${subscription.id}`);
+  const supabase = await createClient();
+
+  // Find user by Stripe customer ID
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("stripe_customer_id", customerId)
+    .single();
+
+  if (!profile) {
+    logger.error(`User not found for customer ID: ${customerId}`);
     return;
   }
 
-  // Get plan from subscription metadata
-  const plan = getPlanFromSubscription(subscription);
-
-  // Update subscription to canceled/free plan
-  const updatedSubscription = await prisma.subscription.update({
-    where: { id: dbSubscription.id },
-    data: {
-      plan: "free",
-      status: "canceled",
-      cancelAtPeriodEnd: false,
-      periodEnd: new Date(), // Set to current time since it's canceled
-    },
-  });
-
-  // Call onSubscriptionCanceled if available
-  if (plan?.onSubscriptionCanceled) {
-    await plan.onSubscriptionCanceled(updatedSubscription, {
-      req,
-      organizationId: updatedSubscription.referenceId,
-      stripeCustomerId: subscription.customer as string,
-      subscriptionId: subscription.id,
-    });
-  }
+  // Revert to free plan
+  await supabase
+    .from("profiles")
+    .update({
+      subscription_status: "free",
+      stripe_subscription_id: null,
+    })
+    .eq("id", profile.id);
 
   logger.info(
     `Subscription canceled and reverted to free plan: ${subscription.id}`,

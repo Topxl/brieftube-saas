@@ -1,4 +1,3 @@
-import { DebugPanel } from "@/features/debug";
 import { NextTopLoader } from "@/features/page/next-top-loader";
 import { ServerToaster } from "@/features/server-sonner/server-toaster";
 import { getServerUrl } from "@/lib/server-url";
@@ -32,7 +31,11 @@ const GeistMono = Geist_Mono({
   variable: "--font-geist-mono",
 });
 
-export default function RootLayout({ children, modal }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body
@@ -47,11 +50,7 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
         <NuqsAdapter>
           <Providers>
             <NextTopLoader delay={100} showSpinner={false} />
-            <Suspense fallback={null}>
-              {children}
-              {modal}
-            </Suspense>
-            {process.env.NODE_ENV === "production" ? null : <DebugPanel />}
+            <Suspense fallback={null}>{children}</Suspense>
             <Suspense>
               <ServerToaster />
             </Suspense>

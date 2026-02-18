@@ -2,6 +2,53 @@
 
 ## 2026-02-18
 
+FIX: Restart worker to resolve Supabase connection issues and enable Telegram delivery
+FIX: Add suppressHydrationWarning to forms to prevent Dashlane extension warnings
+REFACTOR: Replace YouTube Data API with simple HTML scraping (free, no API key needed)
+FEATURE: Add YouTube page scraping to fetch channel info (name, avatar) without API costs
+FEATURE: Update favicon and logo to fast-forward icon (>>) representing content acceleration
+FEATURE: Create youtube.ts helper to fetch real channel data from YouTube
+FIX: Add YOUTUBE_API_KEY to environment schema for optional YouTube API integration
+FIX: Update subscriptions API to accept both URL format and channelId/channelName format
+FIX: Add URL parsing logic to extract channel info from YouTube URLs server-side
+FEATURE: Create YouTube subscriptions API routes (/api/subscriptions) for channel management
+FIX: Add missing API endpoints for adding/removing YouTube channels
+FEATURE: Create Privacy Policy and Terms of Service pages for Google OAuth consent screen
+FEATURE: Configure Google OAuth on Supabase for one-click authentication
+FEATURE: Add Supabase trigger for new user signup handling
+REFACTOR: Complete architecture simplification - Remove Better-Auth, keep only Supabase Auth
+FEATURE: Add Google OAuth login with Supabase Auth (one-click authentication)
+FEATURE: Create simplified login page with Google sign-in button (/login)
+FEATURE: Add OAuth callback handler for Google authentication (/auth/callback)
+FEATURE: Create simplified billing pages with Supabase (/dashboard/billing, /pricing)
+FEATURE: Add Stripe checkout and portal API routes for Supabase Auth
+REFACTOR: Simplify Stripe webhooks to use Supabase profiles table
+REFACTOR: Remove all Better-Auth code (organizations, members, permissions)
+REFACTOR: Remove Prisma ORM and use Supabase exclusively
+REFACTOR: Add redirects from old /orgs/* and /auth/* routes to new /dashboard and /login routes
+CHORE: Remove 100+ Better-Auth dependencies and simplify package.json
+CHORE: Remove 15,000+ lines of unnecessary organization/auth code
+CHORE: Clean up obsolete rules (authentication.md, prisma.md, api-routes.md, mandatory-dependencies.md)
+DOCS: Create SIMPLIFICATION-PLAN.md with complete migration guide
+DOCS: Update CLAUDE.md with new simplified Supabase-only architecture
+DOCS: Create supabase-auth.md rule for authentication patterns
+FIX: Remove all TypeScript errors and ensure build passes successfully
+
+## 2026-02-18 (Earlier)
+
+REFACTOR: Complete migration from organization-based to user-based billing system (Phases 1-6)
+FEATURE: Add User.stripeCustomerId field and migrate Subscription relation to User model
+FEATURE: Create data migration script to migrate billing data from organizations to users (prisma/migrate-billing-to-users.ts)
+FEATURE: Add user-based billing actions (upgradeUserAction, openUserPortalAction, cancelUserSubscriptionAction)
+REFACTOR: Update Stripe webhooks to support both organization and user-based billing during migration
+REFACTOR: Remove organization plugin from Better Auth and add Stripe customer creation on user signup
+CHORE: Update plans.action.ts to use authAction instead of orgAction for user-based billing
+FEATURE: Create simplified /dashboard/billing pages (overview, plan selection) with user-based data
+FEATURE: Add getUserWithSubscription query helper for fetching user subscription data
+FEATURE: Create user-based billing components (UserPlanCard, UserBillingInfoCard, PortalButton)
+REFACTOR: Update pricing-card.tsx to use useSession and upgradeUserAction for user-based subscriptions
+REFACTOR: Update all billing URLs from /orgs/[slug]/settings/billing to /dashboard/billing
+
 FEATURE: Add Telegram monitoring system for worker with real-time alerts and admin commands (/monitor_status, /monitor_stats, /monitor_logs)
 FEATURE: Add worker management scripts (start.sh, stop.sh, restart.sh)
 FEATURE: Add console email adapter for development (shows verification links in logs instead of sending emails)

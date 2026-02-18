@@ -144,7 +144,11 @@ export default function ChannelsPage() {
           </div>
         </div>
       ) : (
-        <form onSubmit={addChannel} className="flex gap-2">
+        <form
+          onSubmit={addChannel}
+          className="flex gap-2"
+          suppressHydrationWarning
+        >
           <Input
             type="url"
             name="youtube-channel-url"
@@ -156,11 +160,13 @@ export default function ChannelsPage() {
             data-form-type="other"
             data-lpignore="true"
             data-1p-ignore
+            suppressHydrationWarning
           />
           <Button
             type="submit"
             disabled={loading}
             className="shrink-0 bg-red-600 shadow-[0_0_12px_rgba(239,68,68,0.15)] hover:bg-red-500"
+            suppressHydrationWarning
           >
             {loading ? "Adding..." : "Add"}
           </Button>

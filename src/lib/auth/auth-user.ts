@@ -1,42 +1,32 @@
-import { headers } from "next/headers";
-import { unauthorized } from "next/navigation";
-import { auth } from "../auth";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-export const getSession = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+export async function getUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  return session as typeof session | undefined;
-};
-
-export const getUser = async () => {
-  const session = await getSession();
-
-  if (!session) {
-    return null;
-  }
-
-  const user = session.user;
   return user;
-};
+}
 
-export const getRequiredUser = async () => {
+export async function getRequiredUser() {
   const user = await getUser();
 
   if (!user) {
-    unauthorized();
+    redirect("/login");
   }
 
   return user;
-};
+}
 
-export const getRequiredAdmin = async () => {
-  const user = await getRequiredUser();
+export async function getUserProfile(userId: string) {
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
 
-  if (user.role !== "admin") {
-    unauthorized();
-  }
-
-  return user;
-};
+  return profile;
+}

@@ -1,108 +1,98 @@
-import { createZodRoute } from "next-zod-route";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { AuthPermissionSchema, RolesKeys } from "./auth/auth-permissions";
-import { getUser } from "./auth/auth-user";
-import { ApplicationError } from "./errors/application-error";
-import { ZodRouteError } from "./errors/zod-route-error";
-import { logger } from "./logger";
-import { getCurrentOrg } from "./organizations/get-org";
+import type { NextRequest } from "next/server";
+import type { ZodSchema } from "zod";
 
-/**
- * Base route handler with automatic error handling and validation
- *
- * @example
- * ```ts
- * export const POST = route
- *   // next.js params in the url
- *   .params(z.object({ id: z.string() }))
- *   // body of the request
- *   .body(z.object({ name: z.string() }))
- *   // search params is stored inside query
- *   .query(z.object({ page: z.number().optional() }))
- *   .handler(async (req, { params, body }) => {
- *     return { success: true };
- *   });
- * ```
- */
-export const route = createZodRoute({
-  handleServerError: (e: Error) => {
-    if (e instanceof ZodRouteError) {
-      logger.debug("[DEV] - ZodRouteError", e);
-      return NextResponse.json(
-        { message: e.message },
-        {
-          status: e.status,
-        },
-      );
-    }
+type Handler<TContext> = (
+  req: NextRequest,
+  context: TContext,
+) => Promise<Response | NextResponse | object>;
 
-    if (e instanceof ApplicationError) {
-      logger.debug("[DEV] - ApplicationError", e);
-      return NextResponse.json({ message: e.message }, { status: 400 });
-    }
+class RouteBuilder<TBody = unknown, TParams = unknown> {
+  private bodySchema?: ZodSchema;
 
-    logger.info("Unknown Error", e);
-
-    if (process.env.NODE_ENV === "development") {
-      return NextResponse.json({ message: e.message }, { status: 500 });
-    }
-
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 },
-    );
-  },
-});
-
-/**
- * Route handler with authentication middleware
- * Ensures user is logged in before accessing the route
- */
-export const authRoute = route.use(async ({ next }) => {
-  const user = await getUser();
-
-  if (!user) {
-    throw new ZodRouteError("Session not found!", 401);
+  body(schema: ZodSchema) {
+    this.bodySchema = schema;
+    return this;
   }
 
-  return next({
-    ctx: { user },
-  });
-});
+  handler(
+    fn: Handler<{
+      body?: TBody;
+      params?: TParams;
+      ctx: { user: { id: string } };
+    }>,
+  ) {
+    return async (req: NextRequest, context: { params?: TParams }) => {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      let parsedBody: TBody | undefined;
+      if (req.method !== "GET" && this.bodySchema) {
+        try {
+          const rawBody = await req.json();
+          parsedBody = this.bodySchema.parse(rawBody) as TBody;
+        } catch {
+          return NextResponse.json(
+            { error: "Invalid request body" },
+            { status: 400 },
+          );
+        }
+      }
+
+      const result = await fn(req, {
+        body: parsedBody,
+        params: context.params,
+        ctx: { user: { id: user.id } },
+      });
+
+      if (result instanceof Response || result instanceof NextResponse) {
+        return result;
+      }
+
+      return NextResponse.json(result);
+    };
+  }
+}
 
 /**
- * Route handler with organization-based authorization
- * Validates user permissions within an organization context
- *
- * @example
- * ```ts
- * export const POST = orgRoute
- *   .metadata({ permissions: { users: ["create"] } })
- *   .handler(async (req, { ctx }) => {
- *     // ctx.organization is available
- *     return { success: true };
- *   });
- * ```
+ * Authenticated route for Supabase
  */
-export const orgRoute = route
-  .defineMetadata(
-    z.object({
-      roles: z.array(z.enum(RolesKeys)).optional(),
-      permissions: AuthPermissionSchema.optional(),
-    }),
-  )
-  .use(async ({ next, metadata }) => {
-    const organization = await getCurrentOrg(metadata);
+export const authRoute = new RouteBuilder();
 
-    if (!organization) {
-      throw new ZodRouteError(
-        "You need to be part of an organization to access this resource.",
-        401,
-      );
-    }
+/**
+ * Public route (no auth required)
+ */
+export const route = {
+  handler: <TBody = unknown, TParams = unknown>(
+    fn: Handler<{ body?: TBody; params?: TParams }>,
+  ) => {
+    return async (req: NextRequest, context: { params?: TParams }) => {
+      let body: TBody | undefined;
+      if (req.method !== "GET") {
+        try {
+          body = (await req.json()) as TBody;
+        } catch {
+          // No body
+        }
+      }
 
-    return next({
-      ctx: { organization },
-    });
-  });
+      const result = await fn(req, {
+        body,
+        params: context.params,
+      });
+
+      if (result instanceof Response || result instanceof NextResponse) {
+        return result;
+      }
+
+      return NextResponse.json(result);
+    };
+  },
+};

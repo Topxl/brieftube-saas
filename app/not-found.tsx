@@ -1,13 +1,14 @@
-import { Header } from "@/features/layout/header";
-import { Page404 } from "@/features/page/page-404";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-export default function NotFoundPage() {
+export default function NotFound() {
   return (
-    <div className="relative flex min-h-screen flex-col">
-      <Header />
-      <div className="flex flex-1 items-center justify-center">
-        <Page404 />
-      </div>
+    <div className="flex min-h-screen flex-col items-center justify-center">
+      <h1 className="text-4xl font-bold">404</h1>
+      <p className="text-muted-foreground mt-2">Page not found</p>
+      <Button asChild className="mt-6">
+        <Link href="/">Go Home</Link>
+      </Button>
     </div>
   );
 }

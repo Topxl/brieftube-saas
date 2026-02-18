@@ -27,7 +27,7 @@ const plans = [
       "Standard processing",
     ],
     cta: "Start Free",
-    href: "/signup",
+    href: "/login",
     highlighted: false,
   },
   {
@@ -43,7 +43,7 @@ const plans = [
       "Early access to new features",
     ],
     cta: "Go Pro",
-    href: "/signup?plan=pro",
+    href: "/login",
     highlighted: true,
   },
 ];

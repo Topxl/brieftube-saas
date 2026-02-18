@@ -1,24 +1,32 @@
-import {
-  adminClient,
-  emailOTPClient,
-  lastLoginMethodClient,
-  magicLinkClient,
-  organizationClient,
-} from "better-auth/client/plugins";
-import { createAuthClient } from "better-auth/react";
-import { getServerUrl } from "./server-url";
+"use client";
 
-export const authClient = createAuthClient({
-  baseURL: getServerUrl(),
-  plugins: [
-    magicLinkClient(),
-    organizationClient(),
-    adminClient(),
-    emailOTPClient(),
-    lastLoginMethodClient(),
-  ],
-});
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
 
-export type AuthClientType = typeof authClient;
+export function useSession() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-export const { useSession, signOut } = authClient;
+  useEffect(() => {
+    const supabase = createClient();
+
+    void supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      setIsLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return {
+    data: user ? { user } : null,
+    isPending: isLoading,
+  };
+}

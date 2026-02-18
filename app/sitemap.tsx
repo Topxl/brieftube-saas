@@ -1,31 +1,24 @@
-import { getPosts } from "@/features/posts/post-manager";
 import type { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const posts = await getPosts();
   return [
     {
-      url: "https://codeline.app",
+      url: "https://brieftube.com",
       lastModified: new Date(),
-      changeFrequency: "monthly",
+      changeFrequency: "weekly",
+      priority: 1,
     },
     {
-      url: "https://codeline.app/login",
+      url: "https://brieftube.com/login",
       lastModified: new Date(),
       changeFrequency: "monthly",
+      priority: 0.8,
     },
     {
-      url: "https://codeline.app/home",
+      url: "https://brieftube.com/pricing",
       lastModified: new Date(),
       changeFrequency: "monthly",
+      priority: 0.9,
     },
-    ...posts.map(
-      (post) =>
-        ({
-          url: `https://codeline.app/posts/${post.slug}`,
-          lastModified: new Date(post.attributes.date),
-          changeFrequency: "monthly",
-        }) as const,
-    ),
   ];
 }

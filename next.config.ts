@@ -14,6 +14,30 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/orgs/:path*",
+        destination: "/dashboard",
+        permanent: true,
+      },
+      {
+        source: "/auth/signin",
+        destination: "/login",
+        permanent: true,
+      },
+      {
+        source: "/auth/signup",
+        destination: "/login",
+        permanent: true,
+      },
+      {
+        source: "/admin/:path*",
+        destination: "/dashboard",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

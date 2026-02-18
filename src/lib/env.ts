@@ -22,8 +22,9 @@ export const env = createEnv({
     STRIPE_SECRET_KEY: z.string().optional(),
     STRIPE_PRO_PRICE_ID: z.string().optional(),
     STRIPE_ULTRA_PRICE_ID: z.string().optional(),
-    NODE_ENV: z.enum(["development", "production", "test"]),
     STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    YOUTUBE_API_KEY: z.string().optional(),
+    NODE_ENV: z.enum(["development", "production", "test"]),
     CI: z.coerce.boolean().optional(),
   },
   /**
