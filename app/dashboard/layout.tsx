@@ -28,7 +28,7 @@ export default async function DashboardLayout({
         email={user.email || ""}
         plan={profile?.subscription_status || "free"}
       />
-      <div className="mx-auto max-w-[1080px] px-4 py-5 md:px-6 md:py-6">
+      <div className="mx-auto max-w-[1080px] px-4 py-5 pb-24 md:px-6 md:py-6 md:pb-6">
         {children}
       </div>
     </div>
