@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { OnboardingStepper } from "@/components/dashboard/onboarding-stepper";
 import { SummariesFeed } from "@/components/dashboard/summaries-feed";
+import { TrialBanner } from "@/components/dashboard/trial-banner";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -42,6 +43,13 @@ export default async function DashboardPage() {
   const telegramConnected = profile?.telegram_connected || false;
   const isPro = profile?.subscription_status === "active";
 
+  // Trial logic — Server Component, Date.now() is safe (not a client hook)
+  const trialEndsAt = profile?.trial_ends_at ?? null;
+  const nowMs = Date.now(); // eslint-disable-line react-hooks/purity
+  const trialDaysLeft = trialEndsAt
+    ? Math.ceil((new Date(trialEndsAt).getTime() - nowMs) / 86400000)
+    : 0;
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -51,7 +59,9 @@ export default async function DashboardPage() {
           <p className="text-muted-foreground text-sm">
             {isPro
               ? "Pro plan"
-              : `Free plan \u00b7 ${channelCount || 0}/${profile?.max_channels || 5} channels`}
+              : trialDaysLeft > 0
+                ? `Pro trial · ${trialDaysLeft} day${trialDaysLeft > 1 ? "s" : ""} left`
+                : `Free plan \u00b7 ${channelCount || 0}/${profile?.max_channels || 2} channels`}
           </p>
         </div>
         <Button
@@ -77,6 +87,9 @@ export default async function DashboardPage() {
           </Link>
         </Button>
       </div>
+
+      {/* Trial banner */}
+      {trialDaysLeft > 0 && <TrialBanner daysLeft={trialDaysLeft} />}
 
       {/* Onboarding */}
       <OnboardingStepper

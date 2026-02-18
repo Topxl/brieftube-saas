@@ -169,6 +169,7 @@ export type Database = {
           telegram_chat_id: string | null;
           telegram_connect_token: string | null;
           telegram_connected: boolean | null;
+          trial_ends_at: string | null;
           tts_voice: string | null;
           updated_at: string | null;
         };
@@ -183,6 +184,7 @@ export type Database = {
           telegram_chat_id?: string | null;
           telegram_connect_token?: string | null;
           telegram_connected?: boolean | null;
+          trial_ends_at?: string | null;
           tts_voice?: string | null;
           updated_at?: string | null;
         };
@@ -197,6 +199,7 @@ export type Database = {
           telegram_chat_id?: string | null;
           telegram_connect_token?: string | null;
           telegram_connected?: boolean | null;
+          trial_ends_at?: string | null;
           tts_voice?: string | null;
           updated_at?: string | null;
         };

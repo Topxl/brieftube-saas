@@ -2,7 +2,16 @@
 
 ## 2026-02-18
 
+FEATURE: P1 — Aha moment : queue la dernière vidéo immédiatement à l'abonnement d'une chaîne pour livraison instantanée sur Telegram
+FEATURE: P2 — Try without signup : démo sur la landing qui résume n'importe quelle vidéo YouTube via Gemini sans créer de compte (rate-limited, 3 essais/10min)
+FEATURE: P4 — Nouveau hero landing orienté bénéfice ("sans regarder une seule vidéo"), CTA "Recevoir mes résumés gratuitement", social proof, lien vers démo
+FEATURE: P5 — Reverse trial 14 jours Pro pour les nouveaux inscrits : migration Supabase trial_ends_at, banner countdown dashboard, statut "Pro trial · X days left"
+CHORE: Ajouter GEMINI_API_KEY à env.ts + @google/generative-ai
+CHORE: Régénérer les types Supabase (trial_ends_at dans profiles)
+FIX: Remove DATABASE_URL from env schema — Prisma removed, Supabase client used directly
 FIX: Use HTTP 303 redirect in Stripe checkout route to force GET and avoid CloudFront 403
+FIX: Use HTTP 303 redirect in Stripe portal route to avoid CloudFront 403
+REFACTOR: Billing page — "Upgrade to Pro" now posts directly to Stripe checkout, removes /pricing intermediate step
 REFACTOR: Complete code quality audit — 34 + 7 issues fixed (full audit pass)
 FIX: Replace <img> with Next.js <Image> in channels page and summaries feed + add YouTube/Google image domains to next.config.ts
 REFACTOR: Extract SummaryRow into dedicated summary-row.tsx (375-line component split)

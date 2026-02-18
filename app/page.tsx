@@ -1,6 +1,7 @@
 import { Hero } from "@/components/landing/hero";
 import { Problem } from "@/components/landing/problem";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { Demo } from "@/components/landing/demo";
 import { Features } from "@/components/landing/features";
 import { Pricing } from "@/components/landing/pricing";
 import { FAQ } from "@/components/landing/faq";
@@ -16,6 +17,8 @@ export default function Home() {
       <div className="section-divider" />
       <Problem />
       <HowItWorks />
+      <div className="section-divider" />
+      <Demo />
       <div className="section-divider" />
       <Features />
       <Pricing />

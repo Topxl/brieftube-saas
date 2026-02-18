@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Youtube } from "lucide-react";
 
 import type { Tables } from "@/types/supabase";
 
@@ -20,6 +22,35 @@ export default function ChannelsPage() {
   const [maxChannels, setMaxChannels] = useState(5);
   const [plan, setPlan] = useState("free");
   const supabase = createClient();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Handle YouTube import result toasts
+  useEffect(() => {
+    const imported = searchParams.get("youtube_imported");
+    const youtubeError = searchParams.get("youtube_error");
+
+    if (imported !== null) {
+      const skipped = searchParams.get("youtube_skipped") ?? "0";
+      toast.success(
+        `${imported} channel${parseInt(imported) !== 1 ? "s" : ""} imported from YouTube${
+          parseInt(skipped) > 0 ? ` (${skipped} already added or skipped)` : ""
+        }`,
+      );
+      router.replace("/dashboard/channels");
+    } else if (youtubeError) {
+      const messages: Record<string, string> = {
+        access_denied: "YouTube access was denied",
+        invalid_state: "Invalid OAuth state, please try again",
+        token_failed: "Failed to authenticate with Google",
+        import_failed: "Import failed, please try again",
+        limit_reached:
+          "Channel limit reached — upgrade to Pro for unlimited channels",
+      };
+      toast.error(messages[youtubeError] ?? "YouTube import failed");
+      router.replace("/dashboard/channels");
+    }
+  }, [searchParams, router]);
 
   const loadData = useCallback(async () => {
     const {
@@ -101,13 +132,21 @@ export default function ChannelsPage() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div>
-        <h1 className="text-lg font-semibold">Channels</h1>
-        <p className="text-muted-foreground text-sm">
-          {isPro
-            ? `${subs.length} channels (unlimited)`
-            : `${subs.length} of ${maxChannels} channels`}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold">Channels</h1>
+          <p className="text-muted-foreground text-sm">
+            {isPro
+              ? `${subs.length} channels (unlimited)`
+              : `${subs.length} of ${maxChannels} channels`}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/api/youtube/auth">
+            <Youtube className="h-4 w-4" />
+            Import from YouTube
+          </Link>
+        </Button>
       </div>
 
       {/* Add form / Upgrade banner */}

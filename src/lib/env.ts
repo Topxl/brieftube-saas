@@ -10,7 +10,6 @@ export const env = createEnv({
   skipValidation:
     !!process.env.SKIP_ENV_VALIDATION || process.env.VERCEL_ENV === "preview",
   server: {
-    DATABASE_URL: z.string().url(),
     GITHUB_CLIENT_ID: z.string().optional(),
     GITHUB_CLIENT_SECRET: z.string().optional(),
     GOOGLE_CLIENT_ID: z.string().optional(),
@@ -24,6 +23,7 @@ export const env = createEnv({
     STRIPE_ULTRA_PRICE_ID: z.string().optional(),
     STRIPE_WEBHOOK_SECRET: z.string().optional(),
     YOUTUBE_API_KEY: z.string().optional(),
+    GEMINI_API_KEY: z.string().optional(),
     NODE_ENV: z.enum(["development", "production", "test"]),
     CI: z.coerce.boolean().optional(),
   },
