@@ -142,10 +142,10 @@ export default function ChannelsPage() {
           </p>
         </div>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/api/youtube/auth">
+          <a href="/api/youtube/auth">
             <Youtube className="h-4 w-4" />
             Import from YouTube
-          </Link>
+          </a>
         </Button>
       </div>
 

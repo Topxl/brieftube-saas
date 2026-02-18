@@ -32,7 +32,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: null,
+    price: "9",
     isPro: true,
     description: "For power users who follow everything.",
     features: [
@@ -54,7 +54,7 @@ export function Pricing() {
   useEffect(() => {
     fetch("/api/stripe/price")
       .then(async (res) => res.json())
-      .then((data) => {
+      .then((data: PriceData) => {
         if (data.amount) {
           setProPriceData(data);
         }
@@ -79,7 +79,7 @@ export function Pricing() {
               const displayPrice =
                 plan.isPro && proPriceData
                   ? formatCurrency(proPriceData.amount, proPriceData.currency)
-                  : { formatted: plan.price ?? "...", symbol: "" };
+                  : { formatted: plan.price, symbol: "" };
 
               const interval =
                 plan.isPro && proPriceData ? proPriceData.interval : "month";
