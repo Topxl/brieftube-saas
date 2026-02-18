@@ -183,7 +183,7 @@ async def processor_loop(alert_system: MonitoringAlert):
                         sb.storage.from_("audio").upload(
                             storage_path,
                             f.read(),
-                            {"content-type": "audio/mpeg"},
+                            {"content-type": "audio/mpeg", "upsert": "true"},
                         )
                     audio_url = sb.storage.from_("audio").get_public_url(storage_path)
                 except Exception as e:
