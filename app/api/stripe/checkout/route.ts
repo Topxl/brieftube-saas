@@ -64,5 +64,5 @@ export async function POST() {
     );
   }
 
-  return NextResponse.redirect(session.url);
+  return NextResponse.redirect(session.url, 303);
 }

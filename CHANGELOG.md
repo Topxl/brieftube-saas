@@ -2,6 +2,7 @@
 
 ## 2026-02-18
 
+FIX: Use HTTP 303 redirect in Stripe checkout route to force GET and avoid CloudFront 403
 REFACTOR: Complete code quality audit — 34 + 7 issues fixed (full audit pass)
 FIX: Replace <img> with Next.js <Image> in channels page and summaries feed + add YouTube/Google image domains to next.config.ts
 REFACTOR: Extract SummaryRow into dedicated summary-row.tsx (375-line component split)
