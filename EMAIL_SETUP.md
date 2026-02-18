@@ -7,6 +7,7 @@
 ### Comment voir les liens de vérification
 
 1. **Démarrez le serveur** :
+
    ```bash
    pnpm dev
    ```
@@ -14,6 +15,7 @@
 2. **Essayez de vous connecter/inscrire**
 
 3. **Regardez les logs dans le terminal** :
+
    ```
    ================================================================================
    📧 EMAIL VERIFICATION LINK:
@@ -70,6 +72,7 @@ pnpm dev
 ### "Je ne vois pas les liens dans les logs"
 
 **Vérifiez** :
+
 - Le serveur dev tourne (`pnpm dev`)
 - Les logs ne sont pas cachés (regardez le terminal)
 - `RESEND_API_KEY` n'est pas configuré (sinon mode production activé)
@@ -77,6 +80,7 @@ pnpm dev
 ### "Les emails Resend ne partent pas"
 
 **Vérifiez** :
+
 1. La clé API est valide (commence par `re_`)
 2. Le domaine est vérifié sur Resend
 3. `EMAIL_FROM` utilise le domaine vérifié
@@ -85,6 +89,7 @@ pnpm dev
 ### "Emails en spam"
 
 **Solutions** :
+
 1. Configurez SPF, DKIM, DMARC sur votre domaine
 2. Utilisez un domaine vérifié (pas de placeholder)
 3. Évitez les mots comme "test", "dev" dans les emails

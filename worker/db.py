@@ -18,6 +18,17 @@ def get_client() -> Client:
     return _client
 
 
+def reset_client() -> None:
+    """Force-recreate the Supabase client on next get_client() call.
+
+    Call this after a 'Server disconnected' or connection error so the
+    stale HTTP connection is dropped and a fresh one is established.
+    """
+    global _client
+    _client = None
+    logger.info("Supabase client reset — will reconnect on next query")
+
+
 # ── Subscriptions ──────────────────────────────────────────────
 
 def get_all_channel_ids() -> list[str]:
@@ -144,9 +155,13 @@ def create_deliveries_for_video(video_id: str, channel_id: str):
 
 
 def get_pending_deliveries(limit: int = 20) -> list[dict]:
-    """Get pending deliveries where the video is completed."""
+    """Get pending deliveries where the video is completed.
+
+    Uses batch fetching to avoid N+1 queries.
+    """
     sb = get_client()
-    # Get pending deliveries
+
+    # 1 query — pending deliveries
     deliveries = (
         sb.table("deliveries")
         .select("id, user_id, video_id")
@@ -155,33 +170,43 @@ def get_pending_deliveries(limit: int = 20) -> list[dict]:
         .limit(limit)
         .execute()
     )
+    if not deliveries.data:
+        return []
+
+    video_ids = list({d["video_id"] for d in deliveries.data})
+    user_ids = list({d["user_id"] for d in deliveries.data})
+
+    # 1 query — all needed completed videos
+    videos_res = (
+        sb.table("processed_videos")
+        .select("video_id, video_title, channel_id, summary, audio_url")
+        .in_("video_id", video_ids)
+        .eq("status", "completed")
+        .execute()
+    )
+    video_map = {v["video_id"]: v for v in (videos_res.data or [])}
+
+    # 1 query — all needed user profiles
+    profiles_res = (
+        sb.table("profiles")
+        .select("id, telegram_chat_id, tts_voice, telegram_connected")
+        .in_("id", user_ids)
+        .execute()
+    )
+    profile_map = {p["id"]: p for p in (profiles_res.data or [])}
+
     results = []
     for d in deliveries.data:
-        # Check if video is completed
-        video = (
-            sb.table("processed_videos")
-            .select("video_id, video_title, channel_id, summary, audio_url")
-            .eq("video_id", d["video_id"])
-            .eq("status", "completed")
-            .execute()
-        )
-        if not video.data:
+        v = video_map.get(d["video_id"])
+        if not v:
             continue
-        v = video.data[0]
-        # Get user's telegram chat_id and tts_voice
-        profile = (
-            sb.table("profiles")
-            .select("telegram_chat_id, tts_voice, telegram_connected")
-            .eq("id", d["user_id"])
-            .single()
-            .execute()
-        )
-        if not profile.data or not profile.data.get("telegram_connected"):
+        profile = profile_map.get(d["user_id"])
+        if not profile or not profile.get("telegram_connected"):
             continue
         results.append({
             "delivery_id": d["id"],
-            "chat_id": profile.data["telegram_chat_id"],
-            "tts_voice": profile.data.get("tts_voice"),
+            "chat_id": profile["telegram_chat_id"],
+            "tts_voice": profile.get("tts_voice"),
             "video_id": v["video_id"],
             "video_title": v["video_title"],
             "channel_id": v["channel_id"],

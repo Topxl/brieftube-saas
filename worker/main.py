@@ -45,6 +45,8 @@ logger = logging.getLogger("worker")
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
+# Suppress verbose Conflict errors from Updater polling (another instance may hold the session)
+logging.getLogger("telegram.ext.Updater").setLevel(logging.CRITICAL)
 
 # ── Constants ──────────────────────────────────────────────────
 
@@ -68,11 +70,16 @@ async def rss_loop(alert_system: MonitoringAlert):
                     level="SUCCESS"
                 )
         except Exception as e:
-            logger.error(f"RSS loop error: {e}")
-            await alert_system.send_alert(
-                f"RSS Scanner error: {e}",
-                level="ERROR"
-            )
+            error_msg = str(e)
+            logger.error(f"RSS loop error: {error_msg}")
+            if "Server disconnected" in error_msg or "ConnectionTerminated" in error_msg:
+                logger.warning("Supabase connection issue in RSS loop - resetting client")
+                db.reset_client()
+            else:
+                await alert_system.send_alert(
+                    f"RSS Scanner error: {error_msg}",
+                    level="ERROR"
+                )
 
         await asyncio.sleep(RSS_CHECK_INTERVAL)
 
@@ -266,6 +273,7 @@ async def delivery_loop(alert_system: MonitoringAlert):
                 except Exception as e:
                     if attempt < max_retries - 1:
                         logger.warning(f"Delivery fetch failed (attempt {attempt + 1}/{max_retries}): {e}")
+                        db.reset_client()  # Force reconnect before retry
                         await asyncio.sleep(2 ** attempt)  # Exponential backoff
                     else:
                         raise
@@ -335,8 +343,9 @@ async def delivery_loop(alert_system: MonitoringAlert):
 
             # Alert on persistent delivery errors
             if "Server disconnected" in error_msg or "ConnectionTerminated" in error_msg:
-                logger.warning("Supabase connection issue - will retry")
-                await asyncio.sleep(30)  # Wait longer before retry
+                logger.warning("Supabase connection issue - resetting client and retrying")
+                db.reset_client()  # Drop stale connection so next iteration reconnects
+                await asyncio.sleep(10)
             else:
                 await alert_system.send_alert(
                     f"🔴 **Delivery Loop Error**\n\n{error_msg[:150]}",
@@ -368,11 +377,17 @@ async def main():
         logger.warning("No ADMIN_TELEGRAM_CHAT_ID set - monitoring alerts disabled")
 
     # Start Telegram bot (polling in background)
+    # Polling is optional: if another instance already holds the session, we
+    # skip command handling but keep delivery (which uses Bot directly).
     bot_app = create_bot_application()
     await bot_app.initialize()
     await bot_app.start()
-    await bot_app.updater.start_polling(allowed_updates=["message"])
-    logger.info("Telegram bot polling started")
+    try:
+        await bot_app.updater.start_polling(allowed_updates=["message"], drop_pending_updates=True)
+        logger.info("Telegram bot polling started")
+    except Exception as e:
+        logger.warning(f"Bot polling failed to start (another instance may be running): {e}")
+        logger.info("Continuing without command handler — deliveries will still work")
 
     # Initialize monitoring alert system
     alert_system = MonitoringAlert(bot_app, ADMIN_TELEGRAM_CHAT_ID)

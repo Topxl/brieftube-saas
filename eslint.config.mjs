@@ -119,6 +119,7 @@ export default [
       "@typescript-eslint/promise-function-async": "error",
       "@typescript-eslint/require-array-sort-compare": "error",
       "@typescript-eslint/unified-signatures": "error",
+      "@next/next/no-html-link-for-pages": ["warn", "app/"],
       "@typescript-eslint/no-empty-object-type": 0,
       "@typescript-eslint/array-type": "error",
       "@typescript-eslint/consistent-type-exports": "error",

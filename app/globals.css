@@ -647,7 +647,12 @@ html.dark .shiki span {
 
 /* Dark mode gradient background */
 .dark body {
-  background: linear-gradient(135deg, oklch(0.1 0.005 270) 0%, oklch(0.08 0.01 300) 50%, oklch(0.1 0.008 240) 100%);
+  background: linear-gradient(
+    135deg,
+    oklch(0.1 0.005 270) 0%,
+    oklch(0.08 0.01 300) 50%,
+    oklch(0.1 0.008 240) 100%
+  );
   background-attachment: fixed;
 }
 
@@ -678,7 +683,8 @@ html.dark .shiki span {
 
 /* Animations */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -696,7 +702,8 @@ html.dark .shiki span {
 }
 
 @keyframes glow-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.5;
     transform: scale(1);
   }
@@ -707,7 +714,8 @@ html.dark .shiki span {
 }
 
 @keyframes orb-drift {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
   33% {
@@ -732,7 +740,12 @@ html.dark .shiki span {
 /* Section divider — subtle horizontal gradient line */
 .section-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.06) 50%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 100%
+  );
   margin: 0 auto;
   max-width: 80%;
 }

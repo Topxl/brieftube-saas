@@ -8,7 +8,9 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect("/login");
@@ -21,7 +23,7 @@ export default async function DashboardLayout({
     .single();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background min-h-screen">
       <DashboardNav
         email={user.email || ""}
         plan={profile?.subscription_status || "free"}

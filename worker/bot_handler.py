@@ -5,6 +5,7 @@ import logging
 import aiohttp
 import feedparser
 from telegram import Update
+from telegram.error import Conflict
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -13,7 +14,7 @@ from telegram.ext import (
     filters,
 )
 
-from config import TELEGRAM_BOT_TOKEN, ADMIN_TELEGRAM_CHAT_ID
+from config import TELEGRAM_BOT_TOKEN, ADMIN_TELEGRAM_CHAT_ID, APP_URL
 import db
 from monitoring import stats, get_system_info, get_log_tail
 
@@ -69,7 +70,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await update.message.reply_text(
             "Welcome to BriefTube!\n\n"
             "To connect your account:\n"
-            "1. Sign up at https://brief-tube.com\n"
+            f"1. Sign up at {APP_URL}\n"
             "2. Go to Dashboard > Settings\n"
             "3. Click 'Generate link' and open it\n\n"
             "Once connected, you'll receive audio summaries of new YouTube videos "
@@ -89,7 +90,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "Send a channel link or @handle → subscribe to it\n\n"
         f"Free plan: {ON_DEMAND_MONTHLY_LIMIT} on-demand summaries/month, 5 channels\n"
         "Pro plan: unlimited\n\n"
-        "Manage your channels at https://brief-tube.com"
+        f"Manage your channels at {APP_URL}"
     )
 
 
@@ -112,12 +113,12 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await update.message.reply_text(
             f"Connected as: {profile['email']}\n"
             f"Plan: {plan}\n\n"
-            "Manage your channels at https://brief-tube.com"
+            f"Manage your channels at {APP_URL}"
         )
     else:
         await update.message.reply_text(
             "Your Telegram is not connected to any BriefTube account.\n\n"
-            "Go to https://brief-tube.com > Settings to connect."
+            f"Go to {APP_URL} > Settings to connect."
         )
 
 
@@ -356,7 +357,7 @@ async def handle_video_request(update: Update, profile: dict, video_id: str) -> 
         if used >= ON_DEMAND_MONTHLY_LIMIT:
             await update.message.reply_text(
                 f"You've reached your monthly limit of {ON_DEMAND_MONTHLY_LIMIT} on-demand summaries.\n\n"
-                "Upgrade to Pro for unlimited summaries at https://brief-tube.com"
+                f"Upgrade to Pro for unlimited summaries at {APP_URL}"
             )
             return
 
@@ -463,7 +464,7 @@ async def handle_channel_subscribe(update: Update, profile: dict, text: str) -> 
         if current_count >= max_channels:
             await update.message.reply_text(
                 f"You've reached your limit of {max_channels} channels.\n\n"
-                "Upgrade to Pro for unlimited channels at https://brief-tube.com"
+                f"Upgrade to Pro for unlimited channels at {APP_URL}"
             )
             return
 
@@ -513,7 +514,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if not profile:
         await update.message.reply_text(
             "Your Telegram is not connected to a BriefTube account.\n\n"
-            "1. Sign up at https://brief-tube.com\n"
+            f"1. Sign up at {APP_URL}\n"
             "2. Go to Settings and connect your Telegram"
         )
         return
@@ -538,9 +539,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     )
 
 
+async def _error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Suppress Conflict errors (another bot instance polling); log everything else."""
+    if isinstance(context.error, Conflict):
+        logger.debug("Bot polling conflict — another instance may be running (deliveries unaffected)")
+        return
+    logger.error(f"Bot error: {context.error}")
+
+
 def create_bot_application() -> Application:
     """Create the Telegram bot application with command handlers."""
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+
+    # Silence Conflict errors in logs — deliveries work independently of polling
+    app.add_error_handler(_error_handler)
 
     # User commands
     app.add_handler(CommandHandler("start", start_command))

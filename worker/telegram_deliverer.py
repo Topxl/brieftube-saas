@@ -35,6 +35,12 @@ async def send_audio_to_user(
 
     Returns True if successful.
     """
+    try:
+        chat_id_int = int(chat_id)
+    except (ValueError, TypeError):
+        logger.error(f"Invalid chat_id format: {chat_id!r}")
+        return False
+
     bot = get_bot()
     video_url = f"https://youtu.be/{video_id}"
     thumbnail_url = get_thumbnail_url(video_id)
@@ -46,7 +52,7 @@ async def send_audio_to_user(
     try:
         # Send thumbnail
         photo_msg = await bot.send_photo(
-            chat_id=int(chat_id),
+            chat_id=chat_id_int,
             photo=thumbnail_url,
             caption=caption,
             parse_mode="MarkdownV2",
@@ -55,7 +61,7 @@ async def send_audio_to_user(
         # Send voice as reply
         with open(audio_path, "rb") as f:
             await bot.send_voice(
-                chat_id=int(chat_id),
+                chat_id=chat_id_int,
                 voice=f,
                 reply_to_message_id=photo_msg.message_id,
             )
@@ -69,7 +75,7 @@ async def send_audio_to_user(
         try:
             with open(audio_path, "rb") as f:
                 await bot.send_voice(
-                    chat_id=int(chat_id),
+                    chat_id=chat_id_int,
                     voice=f,
                     caption=f"**{video_title}**",
                     parse_mode="Markdown",

@@ -40,18 +40,18 @@ export function LandingMobileNav() {
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
-              className="rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-white/[0.06]"
             >
               {link.label}
             </a>
           ))}
         </nav>
-        <div className="flex flex-col gap-3 px-4 mt-4">
+        <div className="mt-4 flex flex-col gap-3 px-4">
           <Button variant="ghost" asChild onClick={() => setOpen(false)}>
             <Link href="/login">Log in</Link>
           </Button>
           <Button
-            className="bg-red-600 hover:bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.25)]"
+            className="bg-red-600 shadow-[0_0_20px_rgba(239,68,68,0.25)] hover:bg-red-500"
             asChild
             onClick={() => setOpen(false)}
           >

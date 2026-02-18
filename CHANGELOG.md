@@ -2,6 +2,30 @@
 
 ## 2026-02-18
 
+REFACTOR: Complete code quality audit — 34 + 7 issues fixed (full audit pass)
+FIX: Replace <img> with Next.js <Image> in channels page and summaries feed + add YouTube/Google image domains to next.config.ts
+REFACTOR: Extract SummaryRow into dedicated summary-row.tsx (375-line component split)
+FIX: Remove as unknown as type assertion in supabase/client.ts — throw explicit error on missing env vars
+FIX: Type-safe res.json() and void async onClick in channels/page.tsx
+FIX: Centralize APP_URL in worker/config.py — replace hardcoded https://brief-tube.com across bot_handler.py
+CHORE: Run Prettier formatter across entire codebase
+CHORE: Delete dead code (channels-list.tsx, add-channel-form.tsx, add-channel-button.tsx — unused components)
+FIX: Convert interface to type in 3 files (summaries-feed, onboarding-stepper, pricing)
+FIX: Fix async forEach race condition in useEffect — use Promise.allSettled
+FIX: Sanitize videoId before URL interpolation to prevent XSS
+FIX: N+1 queries in get_pending_deliveries — batch fetch videos and profiles (3 queries instead of 2N)
+FIX: Stripe webhook — remove internal error details from response, add explicit signature check
+FIX: bare except: → except Exception: in whisper_transcriber.py and gemini_browser.py (18 occurrences)
+FIX: f.unlink() wrapped in try/except in tts_processor.py
+FIX: chat_id validated before int() conversion in telegram_deliverer.py
+FIX: Add Error Boundary (error.tsx) for dashboard
+FIX: Wrap SummariesFeed in Suspense boundary
+FIX: ESLint no-html-link-for-pages false positive on worker/ directory
+FIX: Reset Supabase client on "Server disconnected" errors in delivery and RSS loops to force reconnection instead of reusing stale connection
+FIX: Summaries feed now shows video processing status (completed/failed) instead of delivery status — videos marked "completed" no longer show "pending" badge
+FIX: Onboarding step 3 now completes as soon as any delivery is created (not only after Telegram send)
+FIX: Mark existing RSS videos as skipped when subscribing to a channel to prevent processing old videos
+FIX: Fix "View summaries" button redirecting to home — now scrolls to summaries section via anchor
 FIX: Restart worker to resolve Supabase connection issues and enable Telegram delivery
 FIX: Add suppressHydrationWarning to forms to prevent Dashlane extension warnings
 REFACTOR: Replace YouTube Data API with simple HTML scraping (free, no API key needed)
@@ -25,7 +49,7 @@ FEATURE: Add Stripe checkout and portal API routes for Supabase Auth
 REFACTOR: Simplify Stripe webhooks to use Supabase profiles table
 REFACTOR: Remove all Better-Auth code (organizations, members, permissions)
 REFACTOR: Remove Prisma ORM and use Supabase exclusively
-REFACTOR: Add redirects from old /orgs/* and /auth/* routes to new /dashboard and /login routes
+REFACTOR: Add redirects from old /orgs/_ and /auth/_ routes to new /dashboard and /login routes
 CHORE: Remove 100+ Better-Auth dependencies and simplify package.json
 CHORE: Remove 15,000+ lines of unnecessary organization/auth code
 CHORE: Clean up obsolete rules (authentication.md, prisma.md, api-routes.md, mandatory-dependencies.md)
@@ -80,7 +104,7 @@ FEATURE: Enable manual workflow dispatch trigger for GitHub Actions
 
 CHORE: Complete cleanup for public repo - removed template docs, AI configs, and 33 unnecessary files
 SECURITY: Remove sensitive files from Git tracking - 21,265 files removed (browser cookies, session data, IDE configs, logs)
-CHORE: Update .gitignore to prevent committing worker/cookies/, .cursor/, worker/*.log, and local settings
+CHORE: Update .gitignore to prevent committing worker/cookies/, .cursor/, worker/\*.log, and local settings
 FEATURE: Add pre-commit hook with Husky to run TypeScript check and lint on staged files before each commit
 FIX: Fix all ESLint and TypeScript errors in dashboard components and API routes
 REFACTOR: Convert function declarations to useCallback for proper React hooks behavior
@@ -100,7 +124,7 @@ REFACTOR: Rename project from "NOW.TS" to "BriefTube" template base across all c
 
 ## 2026-01-19
 
-FEATURE: Add x-org-slug header support for /api/orgs/* routes in middleware
+FEATURE: Add x-org-slug header support for /api/orgs/\* routes in middleware
 
 ## 2026-01-18
 

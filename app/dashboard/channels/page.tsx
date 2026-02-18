@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,11 +63,11 @@ export default function ChannelsPage() {
         body: JSON.stringify({ url: channelUrl }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string };
 
       if (!res.ok) {
-        toast.error(data.error || "Failed to add channel");
-        setError(data.error || "Failed to add channel");
+        toast.error(data.error ?? "Failed to add channel");
+        setError(data.error ?? "Failed to add channel");
         return;
       }
 
@@ -207,11 +208,12 @@ export default function ChannelsPage() {
               >
                 <div className="flex min-w-0 items-center gap-3">
                   {sub.channel_avatar_url ? (
-                    <img
+                    <Image
                       src={sub.channel_avatar_url}
                       alt={sub.channel_name}
+                      width={32}
+                      height={32}
                       className="h-8 w-8 shrink-0 rounded-full"
-                      referrerPolicy="no-referrer"
                     />
                   ) : (
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-xs font-bold text-red-400">
@@ -234,7 +236,7 @@ export default function ChannelsPage() {
                 </div>
                 <button
                   className="text-muted-foreground ml-2 shrink-0 px-2 py-1 text-xs transition-colors hover:text-red-400"
-                  onClick={async () => removeChannel(sub.id)}
+                  onClick={() => void removeChannel(sub.id)}
                 >
                   Remove
                 </button>

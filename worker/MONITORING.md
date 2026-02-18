@@ -27,14 +27,14 @@ Envoyez ces commandes à votre bot Telegram (@brief_tube_bot) :
 
 Le système envoie automatiquement des alertes pour :
 
-| Événement | Niveau | Description |
-|-----------|--------|-------------|
-| 🚀 Worker démarré | INFO | Au démarrage du worker |
-| ✅ Vidéo traitée | SUCCESS | Chaque vidéo terminée avec succès |
-| 📹 Nouvelles vidéos | SUCCESS | Nouvelles vidéos détectées par RSS |
-| 🔴 Erreur de traitement | ERROR | Échec de traitement d'une vidéo |
-| ⏱️ Timeout | WARNING | Timeout pendant le traitement |
-| 🛑 Worker arrêté | WARNING | Arrêt du worker |
+| Événement               | Niveau  | Description                        |
+| ----------------------- | ------- | ---------------------------------- |
+| 🚀 Worker démarré       | INFO    | Au démarrage du worker             |
+| ✅ Vidéo traitée        | SUCCESS | Chaque vidéo terminée avec succès  |
+| 📹 Nouvelles vidéos     | SUCCESS | Nouvelles vidéos détectées par RSS |
+| 🔴 Erreur de traitement | ERROR   | Échec de traitement d'une vidéo    |
+| ⏱️ Timeout              | WARNING | Timeout pendant le traitement      |
+| 🛑 Worker arrêté        | WARNING | Arrêt du worker                    |
 
 ### Statistiques Trackées
 
@@ -52,6 +52,7 @@ Le système enregistre :
 ### 1. Obtenir votre Chat ID
 
 **Méthode simple** :
+
 1. Ouvrez Telegram
 2. Cherchez `@userinfobot`
 3. Envoyez `/start`
@@ -134,6 +135,7 @@ nohup venv/bin/python3 main.py > worker.log 2>&1 &
 ### Les commandes ne fonctionnent pas
 
 **Vérifiez** :
+
 1. `ADMIN_TELEGRAM_CHAT_ID` est configuré dans `.env`
 2. Le chat ID est correct (sans guillemets)
 3. Le worker a été redémarré après configuration
@@ -141,6 +143,7 @@ nohup venv/bin/python3 main.py > worker.log 2>&1 &
 ### Pas d'alertes
 
 **Vérifiez** :
+
 1. Le worker tourne (`ps aux | grep main.py`)
 2. Le chat ID est bien configuré
 3. Les logs pour voir les erreurs : `tail -50 worker.log`
@@ -148,6 +151,7 @@ nohup venv/bin/python3 main.py > worker.log 2>&1 &
 ### Alertes trop nombreuses
 
 Les alertes de succès sont envoyées pour **chaque** vidéo traitée. Si c'est trop, vous pouvez :
+
 - Commenter les alertes SUCCESS dans `main.py`
 - Garder seulement les alertes ERROR et WARNING
 

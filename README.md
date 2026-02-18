@@ -36,19 +36,19 @@ BriefTube monitors your favorite YouTube channels, generates AI-powered summarie
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| Frontend | Next.js 15, React 19, TypeScript, TailwindCSS v4, shadcn/ui |
-| Backend | Next.js API Routes, Server Actions |
-| Database | Supabase PostgreSQL with Prisma ORM |
-| Auth | Better Auth (email/password, magic links, OAuth) |
-| Caching | Redis (Upstash) |
-| Worker | Python, Playwright, edge-tts, feedparser |
-| AI | Google Gemini (browser automation) |
-| Telegram | python-telegram-bot |
-| Payments | Stripe subscriptions |
-| Deployment | Vercel (web) + Docker (worker) |
-| Testing | Vitest (unit) + Playwright (e2e) |
+| Component  | Technology                                                  |
+| ---------- | ----------------------------------------------------------- |
+| Frontend   | Next.js 15, React 19, TypeScript, TailwindCSS v4, shadcn/ui |
+| Backend    | Next.js API Routes, Server Actions                          |
+| Database   | Supabase PostgreSQL with Prisma ORM                         |
+| Auth       | Better Auth (email/password, magic links, OAuth)            |
+| Caching    | Redis (Upstash)                                             |
+| Worker     | Python, Playwright, edge-tts, feedparser                    |
+| AI         | Google Gemini (browser automation)                          |
+| Telegram   | python-telegram-bot                                         |
+| Payments   | Stripe subscriptions                                        |
+| Deployment | Vercel (web) + Docker (worker)                              |
+| Testing    | Vitest (unit) + Playwright (e2e)                            |
 
 ## Quick Start
 

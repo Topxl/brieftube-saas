@@ -8,11 +8,11 @@ import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { formatCurrency } from "@/lib/format";
 import { logger } from "@/lib/logger";
 
-interface PriceData {
+type PriceData = {
   amount: number;
   currency: string;
   interval: string;
-}
+};
 
 const plans = [
   {

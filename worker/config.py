@@ -26,6 +26,9 @@ DEFAULT_TTS_VOICE = os.getenv("TTS_VOICE", "fr-FR-DeniseNeural")
 # RSS
 RSS_CHECK_INTERVAL = int(os.getenv("RSS_CHECK_INTERVAL", "300"))  # 5 minutes
 
+# App
+APP_URL = os.getenv("APP_URL", "https://brief-tube.com")
+
 # Gemini
 COOKIES_FILE = COOKIES_DIR / "gemini_session.json"
 BROWSER_PROFILE_DIR = COOKIES_DIR / "browser_profile"

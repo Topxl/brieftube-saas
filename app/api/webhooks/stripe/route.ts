@@ -15,17 +15,32 @@ export const POST = async (req: NextRequest) => {
 
   const stripeSignature = headerList.get("stripe-signature");
 
+  if (!stripeSignature) {
+    return NextResponse.json(
+      { error: "Missing Stripe signature" },
+      { status: 400 },
+    );
+  }
+
+  if (!env.STRIPE_WEBHOOK_SECRET) {
+    logger.error("STRIPE_WEBHOOK_SECRET is not configured");
+    return NextResponse.json(
+      { error: "Webhook not configured" },
+      { status: 500 },
+    );
+  }
+
   let event: Stripe.Event | null = null;
   try {
     event = stripe.webhooks.constructEvent(
       body,
-      stripeSignature ?? "",
-      env.STRIPE_WEBHOOK_SECRET ?? "",
+      stripeSignature,
+      env.STRIPE_WEBHOOK_SECRET,
     );
   } catch (err: unknown) {
     logger.error("Stripe webhook signature verification failed:", err);
     return NextResponse.json(
-      { error: "Invalid Stripe webhook signature", details: err },
+      { error: "Invalid Stripe webhook signature" },
       { status: 400 },
     );
   }

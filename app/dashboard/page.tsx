@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,12 @@ export default async function DashboardPage() {
     .select("*", { count: "exact", head: true })
     .eq("user_id", user.id)
     .eq("status", "sent");
+
+  // For the stepper: any delivery created (even pending) means the system found a new video
+  const { count: anySummaryCount } = await supabase
+    .from("deliveries")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id);
 
   const telegramConnected = profile?.telegram_connected || false;
   const isPro = profile?.subscription_status === "active";
@@ -75,7 +82,7 @@ export default async function DashboardPage() {
       <OnboardingStepper
         telegramConnected={telegramConnected}
         channelCount={channelCount || 0}
-        deliveryCount={deliveryCount || 0}
+        deliveryCount={anySummaryCount || 0}
       />
 
       {/* Stats */}
@@ -173,7 +180,11 @@ export default async function DashboardPage() {
       </div>
 
       {/* Summaries feed */}
-      <SummariesFeed />
+      <div id="summaries">
+        <Suspense fallback={null}>
+          <SummariesFeed />
+        </Suspense>
+      </div>
     </div>
   );
 }

@@ -37,6 +37,7 @@ User → Better-Auth Login → Platform UI
 ## Database Structure
 
 ### Supabase Project
+
 - **Project ID**: `zetpgbrzehchzxodwbps`
 - **URL**: `https://zetpgbrzehchzxodwbps.supabase.co`
 - **Region**: `us-west-1`
@@ -44,7 +45,9 @@ User → Better-Auth Login → Platform UI
 ### Tables
 
 #### `profiles`
+
 User settings and preferences
+
 - `id` (uuid, FK to auth.users)
 - `email` (text)
 - `telegram_chat_id` (text)
@@ -56,7 +59,9 @@ User settings and preferences
 - `preferred_language` (text, default: 'fr')
 
 #### `subscriptions`
+
 YouTube channel subscriptions (user-scoped)
+
 - `id` (uuid)
 - `user_id` (uuid, FK to profiles)
 - `channel_id` (text)
@@ -65,7 +70,9 @@ YouTube channel subscriptions (user-scoped)
 - `active` (boolean, default: true)
 
 #### `processed_videos`
+
 All processed videos (shared across users)
+
 - `id` (uuid)
 - `video_id` (text, unique)
 - `channel_id` (text)
@@ -80,7 +87,9 @@ All processed videos (shared across users)
 - `processed_at` (timestamptz)
 
 #### `processing_queue`
+
 Worker queue for video processing
+
 - `id` (uuid)
 - `video_id` (text, unique)
 - `youtube_url` (text)
@@ -91,7 +100,9 @@ Worker queue for video processing
 - `tts_voice` (text)
 
 #### `deliveries`
+
 Tracks video deliveries to users
+
 - `id` (uuid)
 - `user_id` (uuid, FK to profiles)
 - `video_id` (text)
@@ -102,20 +113,24 @@ Tracks video deliveries to users
 ## API Routes
 
 ### `/api/brieftube/subscriptions`
+
 - **GET**: List user's YouTube subscriptions
 - **POST**: Add new channel subscription (with limit checks)
 - **DELETE**: Remove subscription
 
 ### `/api/brieftube/videos`
+
 - **GET**: Get processed videos from subscribed channels
 
 ### `/api/brieftube/telegram/connect`
+
 - **GET**: Get user's Telegram settings & connection token
 - **POST**: Update Telegram settings (chatId, voice, language)
 
 ## Components
 
 ### UI Components Location
+
 `/src/features/youtube-summary/components/`
 
 - `add-channel-button.tsx` - Dialog trigger for adding channels
@@ -125,11 +140,13 @@ Tracks video deliveries to users
 - `telegram-connect.tsx` - Telegram connection status & token
 
 ### Page Location
+
 `/app/orgs/[orgSlug]/(navigation)/youtube/page.tsx`
 
 ## Configuration
 
 ### Environment Variables
+
 ```bash
 # .env.local
 NEXT_PUBLIC_SUPABASE_URL="https://zetpgbrzehchzxodwbps.supabase.co"
@@ -138,15 +155,18 @@ SUPABASE_SERVICE_ROLE_KEY="(optional, for admin operations)"
 ```
 
 ### Supabase Client
+
 Located at `/src/lib/supabase/client.ts`
 
 Exports:
+
 - `supabase` - Configured Supabase client
 - Type definitions: `Profile`, `Subscription`, `ProcessedVideo`, `ProcessingQueue`, `Delivery`
 
 ## Navigation
 
 Added to organization navigation:
+
 ```typescript
 {
   href: `${ORGANIZATION_PATH}/youtube`,
@@ -158,6 +178,7 @@ Added to organization navigation:
 ## User Flow
 
 ### 1. Connect Telegram
+
 1. User navigates to YouTube Summaries page
 2. Sees connection token
 3. Opens Telegram, finds @BriefTubeBot
@@ -165,6 +186,7 @@ Added to organization navigation:
 5. Bot verifies token and updates `telegram_connected = true`
 
 ### 2. Add YouTube Channel
+
 1. Click "Add Channel" button
 2. Enter YouTube channel URL or @handle
 3. System extracts channel ID
@@ -172,6 +194,7 @@ Added to organization navigation:
 5. Creates subscription in Supabase
 
 ### 3. Automatic Processing
+
 1. Python worker scans RSS feeds for new videos
 2. Worker adds videos to `processing_queue`
 3. Worker processes:
@@ -184,6 +207,7 @@ Added to organization navigation:
 6. Telegram bot sends audio to users
 
 ### 4. View Summaries
+
 1. User sees processed videos in feed
 2. Can play audio directly
 3. Can view original video on YouTube
@@ -191,17 +215,21 @@ Added to organization navigation:
 ## Security Considerations
 
 ### Row Level Security (RLS)
+
 All Supabase tables have RLS enabled. Users can only:
+
 - Read their own subscriptions
 - Read videos from their subscribed channels
 - Update their own profile settings
 
 ### API Security
+
 - All API routes use `authRoute` from Better-Auth
 - User ID from Better-Auth is used to query Supabase
 - No cross-user data leakage
 
 ### Token Security
+
 - `telegram_connect_token` is unique per user
 - Generated with `nanoid(16)` (16 characters, URL-safe)
 - Token is only used once during connection
@@ -209,19 +237,25 @@ All Supabase tables have RLS enabled. Users can only:
 ## Future Enhancements
 
 ### Organization-Scoped Subscriptions
+
 Currently subscriptions are user-scoped. Future enhancement:
+
 - Add `organization_id` to subscriptions table
 - Share subscriptions across team members
 - Organization-level billing & limits
 
 ### Better-Auth Profile Sync
+
 Create a bridge between Better-Auth users and Supabase profiles:
+
 - On user signup in Better-Auth → create profile in Supabase
 - Sync email updates
 - Consider migrating entirely to Better-Auth
 
 ### Webhook Integration
+
 Add webhooks to notify Platform of:
+
 - New videos processed
 - Delivery status updates
 - Worker errors
@@ -229,10 +263,12 @@ Add webhooks to notify Platform of:
 ## Dependencies
 
 ### NPM Packages
+
 - `@supabase/supabase-js` - Supabase client
 - `nanoid` - Token generation (already installed)
 
 ### Python Worker Dependencies
+
 - `psycopg2-binary` - PostgreSQL client
 - `python-telegram-bot` - Telegram bot
 - `edge-tts` - Text-to-speech
@@ -243,6 +279,7 @@ Add webhooks to notify Platform of:
 ## Monitoring
 
 ### Key Metrics to Track
+
 - Subscriptions per user
 - Videos processed per day
 - Delivery success rate
@@ -250,6 +287,7 @@ Add webhooks to notify Platform of:
 - API response times
 
 ### Logs to Monitor
+
 - Supabase API errors (in Next.js logs)
 - Python worker logs (worker/logs/)
 - Telegram bot delivery failures
@@ -258,16 +296,19 @@ Add webhooks to notify Platform of:
 ## Troubleshooting
 
 ### "Failed to add channel"
+
 - Check Supabase connection
 - Verify `max_channels` limit not exceeded
 - Check if channel already subscribed
 
 ### "Telegram not connecting"
+
 - Verify bot is running
 - Check `telegram_connect_token` is generated
 - Ensure token matches in bot and database
 
 ### "Videos not appearing"
+
 - Check Python worker is running
 - Verify subscriptions are active
 - Check `processing_queue` status
@@ -276,6 +317,7 @@ Add webhooks to notify Platform of:
 ## Contact & Support
 
 For issues related to:
+
 - **Platform UI**: Check BriefTube Platform logs
 - **Worker Processing**: Check Python worker logs at `/home/vj/Bureau/BriefTube/worker/`
 - **Supabase**: Use Supabase dashboard at https://supabase.com/dashboard/project/zetpgbrzehchzxodwbps

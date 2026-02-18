@@ -5,10 +5,21 @@ import { ScrollReveal } from "@/components/ui/scroll-reveal";
 const features = [
   {
     title: "AI-Powered Summaries",
-    description: "Detailed summaries that capture the key points, not just the title.",
+    description:
+      "Detailed summaries that capture the key points, not just the title.",
     icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"
+        />
       </svg>
     ),
   },
@@ -16,8 +27,18 @@ const features = [
     title: "Natural Audio",
     description: "Neural text-to-speech voices that sound human. Not robotic.",
     icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"
+        />
       </svg>
     ),
   },
@@ -25,8 +46,18 @@ const features = [
     title: "Instant Delivery",
     description: "Get summaries within minutes of a video going live.",
     icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+        />
       </svg>
     ),
   },
@@ -34,8 +65,18 @@ const features = [
     title: "Multi-Language",
     description: "French, English, and more. Choose the voice that suits you.",
     icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" />
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802"
+        />
       </svg>
     ),
   },
@@ -43,18 +84,43 @@ const features = [
     title: "Unlimited Channels",
     description: "Follow every channel you care about. No limits on Pro.",
     icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 12.75l-5.571-3m11.142 0l4.179 2.25L12 17.25l-9.75-5.25 4.179-2.25" />
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 12.75l-5.571-3m11.142 0l4.179 2.25L12 17.25l-9.75-5.25 4.179-2.25"
+        />
       </svg>
     ),
   },
   {
     title: "Listen Anywhere",
-    description: "Telegram works offline. Download summaries and listen without internet.",
+    description:
+      "Telegram works offline. Download summaries and listen without internet.",
     icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+        />
       </svg>
     ),
   },
@@ -68,7 +134,7 @@ export function Features() {
           <h2 className="font-display text-center text-2xl font-bold md:text-3xl">
             Everything you need
           </h2>
-          <p className="mt-3 text-center text-muted-foreground">
+          <p className="text-muted-foreground mt-3 text-center">
             Simple, powerful, and completely automated.
           </p>
         </ScrollReveal>
@@ -76,13 +142,16 @@ export function Features() {
         <ScrollReveal delay={150}>
           <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => (
-              <div key={feature.title} className="group flex gap-4 rounded-2xl p-4 transition-all duration-300 hover:bg-white/[0.03]">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] backdrop-blur-sm border border-white/[0.08] text-foreground transition-all duration-300 group-hover:text-red-400 group-hover:border-red-500/15 group-hover:bg-red-500/[0.06] group-hover:shadow-[0_0_16px_rgba(239,68,68,0.08)]">
+              <div
+                key={feature.title}
+                className="group flex gap-4 rounded-2xl p-4 transition-all duration-300 hover:bg-white/[0.03]"
+              >
+                <div className="text-foreground flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.06] backdrop-blur-sm transition-all duration-300 group-hover:border-red-500/15 group-hover:bg-red-500/[0.06] group-hover:text-red-400 group-hover:shadow-[0_0_16px_rgba(239,68,68,0.08)]">
                   {feature.icon}
                 </div>
                 <div>
                   <h3 className="font-semibold">{feature.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-sm">
                     {feature.description}
                   </p>
                 </div>

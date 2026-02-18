@@ -75,7 +75,7 @@ class GeminiSummarizer:
                         if stop_btn and await stop_btn.is_visible():
                             generation_started = True
                             break
-                    except:
+                    except Exception:
                         continue
                 if generation_started:
                     break
@@ -86,7 +86,7 @@ class GeminiSummarizer:
                         if len(text) > 50:
                             generation_started = True
                             break
-                except:
+                except Exception:
                     pass
                 await asyncio.sleep(0.5)
 
@@ -114,7 +114,7 @@ class GeminiSummarizer:
                             else:
                                 stable_count = 0
                                 last_text_length = current_length
-                except:
+                except Exception:
                     pass
 
                 if generation_started and last_text_length > 500:
@@ -136,7 +136,7 @@ class GeminiSummarizer:
                                 if not stop_visible:
                                     logger.info(f"Response complete (send button) after {i * 0.5:.1f}s")
                                     return True
-                        except:
+                        except Exception:
                             continue
 
                 if i > 0 and i % 120 == 0:
@@ -176,7 +176,7 @@ class GeminiSummarizer:
                         lines = text.split('\n')
                         if len([l for l in lines if len(l) > 30]) > 2:
                             return text
-            except:
+            except Exception:
                 continue
         logger.warning("Could not extract Gemini response")
         return ""
@@ -187,7 +187,7 @@ class GeminiSummarizer:
             return
         try:
             _ = self.context.pages
-        except:
+        except Exception:
             self.context = None
             self.playwright = None
             await self.start()
@@ -223,7 +223,7 @@ class GeminiSummarizer:
                                 break
                     if menu_clicked:
                         break
-                except:
+                except Exception:
                     continue
 
             if not menu_clicked:
@@ -241,9 +241,9 @@ class GeminiSummarizer:
                                 await btn.click()
                                 menu_clicked = True
                                 break
-                        except:
+                        except Exception:
                             continue
-                except:
+                except Exception:
                     pass
 
             if not menu_clicked:
@@ -270,7 +270,7 @@ class GeminiSummarizer:
                                 break
                     if delete_clicked:
                         break
-                except:
+                except Exception:
                     continue
 
             if not delete_clicked:
@@ -292,7 +292,7 @@ class GeminiSummarizer:
                             logger.info("Conversation deleted")
                             await asyncio.sleep(2)
                             return True
-                except:
+                except Exception:
                     continue
 
             return False
@@ -308,7 +308,7 @@ class GeminiSummarizer:
 
         try:
             page = await self.context.new_page()
-        except:
+        except Exception:
             self.context = None
             self.playwright = None
             await self.start()
@@ -333,7 +333,7 @@ class GeminiSummarizer:
                         await btn.click()
                         await asyncio.sleep(2)
                         break
-                except:
+                except Exception:
                     continue
 
             await asyncio.sleep(2)
@@ -349,7 +349,7 @@ class GeminiSummarizer:
                     input_field = await page.wait_for_selector(selector, timeout=10000)
                     if input_field and await input_field.is_visible():
                         break
-                except:
+                except Exception:
                     continue
 
             if not input_field:
@@ -379,7 +379,7 @@ class GeminiSummarizer:
                             await btn.click()
                             message_sent = True
                             break
-                    except:
+                    except Exception:
                         continue
 
                 if not message_sent:
@@ -394,7 +394,7 @@ class GeminiSummarizer:
                                 await btn.click()
                                 message_sent = True
                                 break
-                        except:
+                        except Exception:
                             continue
 
                 if not message_sent:
@@ -405,7 +405,7 @@ class GeminiSummarizer:
                     txt = await input_field.inner_text()
                     if not txt or len(txt) < 10:
                         message_sent = True
-                except:
+                except Exception:
                     pass
 
                 if message_sent:
@@ -425,7 +425,7 @@ class GeminiSummarizer:
                         text = await responses[-1].inner_text()
                         if len(text) > 100:
                             break
-                except:
+                except Exception:
                     pass
                 await asyncio.sleep(1)
 

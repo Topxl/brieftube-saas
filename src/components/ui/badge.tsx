@@ -9,7 +9,8 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-white/[0.1] text-foreground border-white/[0.1] [a&]:hover:bg-white/[0.15]",
+        default:
+          "bg-white/[0.1] text-foreground border-white/[0.1] [a&]:hover:bg-white/[0.15]",
         secondary:
           "bg-white/[0.06] text-muted-foreground border-white/[0.08] [a&]:hover:bg-white/[0.1]",
         destructive:
@@ -23,7 +24,7 @@ const badgeVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  }
+  },
 );
 
 function Badge({

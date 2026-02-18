@@ -180,6 +180,37 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // Mark existing RSS videos as skipped so the worker doesn't process old videos
+  try {
+    const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${finalChannelId}`;
+    const rssResponse = await fetch(rssUrl);
+    const rssText = await rssResponse.text();
+    const videoIds = [
+      ...rssText.matchAll(/<yt:videoId>([^<]+)<\/yt:videoId>/g),
+    ].map((m) => m[1]);
+
+    await Promise.all(
+      videoIds.map((videoId) =>
+        supabase.from("processed_videos").upsert(
+          {
+            video_id: videoId,
+            channel_id: finalChannelId,
+            video_title: "[pre-subscription]",
+            video_url: `https://www.youtube.com/watch?v=${videoId}`,
+            status: "skipped",
+          },
+          { onConflict: "video_id", ignoreDuplicates: true },
+        ),
+      ),
+    );
+    logger.info(
+      `Marked ${videoIds.length} existing videos as skipped for channel ${finalChannelId}`,
+    );
+  } catch (e) {
+    // Non-critical: log but don't fail the subscription creation
+    logger.error("Failed to mark existing videos as skipped:", e);
+  }
+
   return NextResponse.json(data, { status: 201 });
 }
 

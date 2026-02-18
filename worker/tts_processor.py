@@ -41,7 +41,10 @@ def cleanup_audio_files(max_age_hours: int = 1) -> int:
     count = 0
     now = time.time()
     for f in AUDIO_DIR.glob("*.mp3"):
-        if now - f.stat().st_mtime > max_age_hours * 3600:
-            f.unlink()
-            count += 1
+        try:
+            if now - f.stat().st_mtime > max_age_hours * 3600:
+                f.unlink()
+                count += 1
+        except Exception as e:
+            logger.warning(f"Could not delete audio file {f.name}: {e}")
     return count

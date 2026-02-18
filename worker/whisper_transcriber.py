@@ -155,13 +155,13 @@ class WhisperTranscriber:
             if audio_file and audio_file.exists():
                 try:
                     audio_file.unlink()
-                except:
+                except Exception:
                     pass
 
             if temp_dir:
                 try:
                     Path(temp_dir).rmdir()
-                except:
+                except Exception:
                     pass
 
 

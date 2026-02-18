@@ -4,11 +4,11 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface OnboardingStepperProps {
+type OnboardingStepperProps = {
   telegramConnected: boolean;
   channelCount: number;
   deliveryCount: number;
-}
+};
 
 const steps = [
   {
@@ -27,7 +27,7 @@ const steps = [
     title: "First summary",
     description: "Arrives when a new video drops",
     cta: "View summaries",
-    href: "/dashboard/summaries",
+    href: "/dashboard#summaries",
   },
 ];
 
@@ -44,9 +44,11 @@ export function OnboardingStepper({
 
   return (
     <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 sm:p-4">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-medium text-muted-foreground">Setup {completedCount}/3</p>
-        <div className="h-1 w-20 sm:w-24 rounded-full bg-white/[0.06]">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-muted-foreground text-xs font-medium">
+          Setup {completedCount}/3
+        </p>
+        <div className="h-1 w-20 rounded-full bg-white/[0.06] sm:w-24">
           <div
             className="h-full rounded-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500"
             style={{ width: `${(completedCount / 3) * 100}%` }}
@@ -67,27 +69,43 @@ export function OnboardingStepper({
               }`}
             >
               <div className="flex items-center gap-2">
-                <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] ${
-                  done
-                    ? "bg-emerald-500/20 text-emerald-400"
-                    : "bg-white/[0.06] text-muted-foreground"
-                }`}>
+                <div
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] ${
+                    done
+                      ? "bg-emerald-500/20 text-emerald-400"
+                      : "text-muted-foreground bg-white/[0.06]"
+                  }`}
+                >
                   {done ? <Check className="h-3 w-3" /> : i + 1}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-medium leading-tight ${done ? "text-emerald-400" : ""}`}>
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`text-xs leading-tight font-medium ${done ? "text-emerald-400" : ""}`}
+                  >
                     {step.title}
                   </p>
-                  <p className="text-[11px] text-muted-foreground leading-snug">{step.description}</p>
+                  <p className="text-muted-foreground text-[11px] leading-snug">
+                    {step.description}
+                  </p>
                 </div>
                 {!done && (
-                  <Button size="xs" variant="outline" className="text-[11px] h-6 shrink-0 sm:hidden" asChild>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    className="h-6 shrink-0 text-[11px] sm:hidden"
+                    asChild
+                  >
                     <Link href={step.href}>{step.cta}</Link>
                   </Button>
                 )}
               </div>
               {!done && (
-                <Button size="xs" variant="outline" className="mt-2 text-[11px] h-6 hidden sm:inline-flex" asChild>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  className="mt-2 hidden h-6 text-[11px] sm:inline-flex"
+                  asChild
+                >
                   <Link href={step.href}>{step.cta}</Link>
                 </Button>
               )}

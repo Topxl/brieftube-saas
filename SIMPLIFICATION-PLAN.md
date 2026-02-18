@@ -1,16 +1,19 @@
 # Plan de Simplification BriefTube
 
 ## 🎯 Objectif
+
 Simplifier l'architecture en gardant uniquement **Supabase Auth avec Google OAuth** et supprimer toute la complexité Better-Auth/Organizations.
 
 ## ✅ Étape 1 : Configuration Google OAuth (FAIT ✓)
 
 **Pages créées :**
+
 - ✅ `/app/login/page.tsx` - Page de login avec Google
 - ✅ `/app/login/_components/google-login-button.tsx` - Bouton Google OAuth
 - ✅ `/app/auth/callback/route.ts` - Callback OAuth
 
 **À faire (Manuel) :**
+
 1. Aller sur https://supabase.com/dashboard/project/zetpgbrzehchzxodwbps/auth/providers
 2. Activer "Google" provider
 3. Créer OAuth credentials sur https://console.cloud.google.com/apis/credentials
@@ -21,6 +24,7 @@ Simplifier l'architecture en gardant uniquement **Supabase Auth avec Google OAut
 ## 🗑️ Étape 2 : Fichiers/Dossiers à Supprimer
 
 ### A. Dossiers complets à supprimer
+
 ```bash
 # Better-Auth pages
 rm -rf app/orgs/
@@ -50,6 +54,7 @@ rm src/hooks/use-current-org.ts
 ```
 
 ### B. Fichiers individuels à supprimer
+
 ```bash
 # Actions organisations
 rm src/features/plans/plans.action.ts
@@ -72,6 +77,7 @@ rm proxy.ts
 ```
 
 ### C. Dépendances à retirer (package.json)
+
 ```json
 {
   "dependencies": {
@@ -93,7 +99,9 @@ rm proxy.ts
 ## 🔨 Étape 3 : Simplifier le Billing (Supabase uniquement)
 
 ### A. Créer actions Supabase simples
+
 **Fichier:** `app/dashboard/billing/_actions/stripe.action.ts`
+
 ```typescript
 "use server";
 
@@ -102,7 +110,9 @@ import { stripe } from "@/lib/stripe";
 
 export async function createCheckoutSession(planId: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) throw new Error("Not authenticated");
 
@@ -125,7 +135,9 @@ export async function createCheckoutSession(planId: string) {
 
 export async function createPortalSession() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) throw new Error("Not authenticated");
 
@@ -145,13 +157,16 @@ export async function createPortalSession() {
 ```
 
 ### B. Webhook Stripe simplifié
+
 **Garder uniquement:** `app/api/webhooks/stripe/route.ts`
 **Simplifier pour** chercher dans `profiles` au lieu de `organization`
 
 ## 📝 Étape 4 : Mettre à jour les routes
 
 ### A. Rediriger anciennes routes
+
 **Fichier:** `next.config.ts`
+
 ```typescript
 async redirects() {
   return [
@@ -175,16 +190,19 @@ async redirects() {
 ```
 
 ### B. Simplifier middleware
+
 **Supprimer** toute la logique organisation du middleware
 
 ## 🧹 Étape 5 : Nettoyer CLAUDE.md
 
 Supprimer les sections :
+
 - ❌ Multi-tenant Organizations
 - ❌ Authentication (Better Auth)
 - ❌ Organization-based data access patterns
 
 Garder uniquement :
+
 - ✅ Supabase Auth
 - ✅ User-based billing
 - ✅ Simplified routes
@@ -192,6 +210,7 @@ Garder uniquement :
 ## 📊 Comparaison Avant/Après
 
 ### AVANT (Complexe)
+
 ```
 Routes:
 ├─ /orgs/[slug]/settings/billing
@@ -208,6 +227,7 @@ DB: Prisma (organization, user, member) + Supabase (profiles)
 ```
 
 ### APRÈS (Simple)
+
 ```
 Routes:
 ├─ /login (Google uniquement)
@@ -223,27 +243,32 @@ DB: Supabase (profiles uniquement)
 ## ✅ Checklist d'Exécution
 
 ### Phase 1 : Configuration Google OAuth
+
 - [ ] Configurer Google OAuth sur Supabase Dashboard
 - [ ] Tester la connexion avec Google
 - [ ] Vérifier que le profil est créé automatiquement
 
 ### Phase 2 : Suppression fichiers
+
 - [ ] Supprimer dossiers listés ci-dessus
 - [ ] Supprimer fichiers individuels
 - [ ] Retirer dépendances du package.json
 - [ ] Run `pnpm install`
 
 ### Phase 3 : Simplifier billing
+
 - [ ] Créer actions Stripe simplifiées
 - [ ] Simplifier webhook Stripe
 - [ ] Tester upgrade/cancel subscription
 
 ### Phase 4 : Routes
+
 - [ ] Ajouter redirects dans next.config.ts
 - [ ] Simplifier middleware
 - [ ] Tester toutes les routes
 
 ### Phase 5 : Nettoyer
+
 - [ ] Mettre à jour CLAUDE.md
 - [ ] Mettre à jour README
 - [ ] Run `pnpm clean`
