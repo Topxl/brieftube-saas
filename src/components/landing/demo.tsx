@@ -55,7 +55,11 @@ export function Demo() {
           Sans créer de compte. On génère le résumé en quelques secondes.
         </p>
 
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form
+          onSubmit={handleSubmit}
+          className="flex gap-2"
+          suppressHydrationWarning
+        >
           <Input
             type="url"
             value={url}
@@ -63,11 +67,13 @@ export function Demo() {
             placeholder="https://youtube.com/watch?v=..."
             className="flex-1"
             disabled={loading}
+            suppressHydrationWarning
           />
           <Button
             type="submit"
             disabled={loading || !url.trim()}
             className="shrink-0 bg-red-600 hover:bg-red-500"
+            suppressHydrationWarning
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Résumer"}
           </Button>
