@@ -157,17 +157,21 @@ def create_deliveries_for_video(video_id: str, channel_id: str):
 def get_pending_deliveries(limit: int = 20) -> list[dict]:
     """Get pending deliveries where the video is completed.
 
-    Uses batch fetching to avoid N+1 queries.
+    Fetches a larger batch than `limit` so that deliveries blocked by
+    still-pending/failed videos don't starve deliveries with completed videos.
     """
     sb = get_client()
 
-    # 1 query — pending deliveries
+    # Fetch 5x more than needed: non-completed videos in the queue would
+    # block delivery if we only fetched `limit` rows (oldest-first).
+    fetch_limit = max(limit * 5, 100)
+
     deliveries = (
         sb.table("deliveries")
         .select("id, user_id, video_id")
         .eq("status", "pending")
         .order("created_at")
-        .limit(limit)
+        .limit(fetch_limit)
         .execute()
     )
     if not deliveries.data:
@@ -176,7 +180,7 @@ def get_pending_deliveries(limit: int = 20) -> list[dict]:
     video_ids = list({d["video_id"] for d in deliveries.data})
     user_ids = list({d["user_id"] for d in deliveries.data})
 
-    # 1 query — all needed completed videos
+    # Only completed videos
     videos_res = (
         sb.table("processed_videos")
         .select("video_id, video_title, channel_id, summary, audio_url")
@@ -186,7 +190,7 @@ def get_pending_deliveries(limit: int = 20) -> list[dict]:
     )
     video_map = {v["video_id"]: v for v in (videos_res.data or [])}
 
-    # 1 query — all needed user profiles
+    # User profiles
     profiles_res = (
         sb.table("profiles")
         .select("id, telegram_chat_id, tts_voice, telegram_connected")
@@ -213,7 +217,60 @@ def get_pending_deliveries(limit: int = 20) -> list[dict]:
             "summary": v["summary"],
             "audio_url": v["audio_url"],
         })
+        if len(results) >= limit:
+            break
     return results
+
+
+def cleanup_undeliverable_deliveries() -> int:
+    """Mark pending deliveries as failed when their video failed or when the
+    user has no Telegram connected. Prevents stuck deliveries from blocking
+    the queue forever. Returns the number of deliveries cleaned up."""
+    sb = get_client()
+    cleaned = 0
+
+    # Failed videos → deliveries can never succeed
+    failed_videos = (
+        sb.table("processed_videos")
+        .select("video_id")
+        .eq("status", "failed")
+        .execute()
+    )
+    if failed_videos.data:
+        failed_ids = [v["video_id"] for v in failed_videos.data]
+        # Process in batches of 100 to stay within PostgREST limits
+        for i in range(0, len(failed_ids), 100):
+            batch = failed_ids[i : i + 100]
+            res = (
+                sb.table("deliveries")
+                .update({"status": "failed"})
+                .eq("status", "pending")
+                .in_("video_id", batch)
+                .execute()
+            )
+            cleaned += len(res.data or [])
+
+    # Users without Telegram → deliveries can never be sent
+    disconnected = (
+        sb.table("profiles")
+        .select("id")
+        .or_("telegram_connected.is.false,telegram_chat_id.is.null")
+        .execute()
+    )
+    if disconnected.data:
+        user_ids = [p["id"] for p in disconnected.data]
+        for i in range(0, len(user_ids), 100):
+            batch = user_ids[i : i + 100]
+            res = (
+                sb.table("deliveries")
+                .update({"status": "failed"})
+                .eq("status", "pending")
+                .in_("user_id", batch)
+                .execute()
+            )
+            cleaned += len(res.data or [])
+
+    return cleaned
 
 
 def mark_delivery_sent(delivery_id: str):

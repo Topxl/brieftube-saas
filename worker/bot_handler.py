@@ -42,6 +42,15 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
         # Look up the token in profiles and link the chat_id
         sb = db.get_client()
+
+        # Step 1: Unlink any other profile already connected to this chat_id
+        # (a Telegram account can only be linked to ONE BriefTube account at a time)
+        sb.table("profiles").update({
+            "telegram_chat_id": None,
+            "telegram_connected": False,
+        }).eq("telegram_chat_id", chat_id).neq("telegram_connect_token", token).execute()
+
+        # Step 2: Link this profile
         res = (
             sb.table("profiles")
             .update({

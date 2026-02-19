@@ -277,8 +277,22 @@ async def delivery_loop(alert_system: MonitoringAlert):
     """Send completed audio to subscribed users."""
     logger.info("Telegram Deliverer started")
 
+    _cleanup_counter = 0  # Run cleanup every N cycles
+
     while True:
         try:
+            # Periodically clean up undeliverable deliveries (failed videos /
+            # disconnected users) so they don't block the queue.
+            _cleanup_counter += 1
+            if _cleanup_counter >= 20:  # every ~5 min (20 × 15s sleep)
+                _cleanup_counter = 0
+                try:
+                    cleaned = await asyncio.to_thread(db.cleanup_undeliverable_deliveries)
+                    if cleaned:
+                        logger.info(f"Cleaned up {cleaned} undeliverable deliveries")
+                except Exception as e:
+                    logger.warning(f"Cleanup error (non-fatal): {e}")
+
             # Get pending deliveries with retry on connection errors
             deliveries = []
             max_retries = 3
@@ -334,8 +348,26 @@ async def delivery_loop(alert_system: MonitoringAlert):
                     )
 
                     if success:
-                        db.mark_delivery_sent(d["delivery_id"])
-                        stats.record_delivery_sent()
+                        # Retry marking as sent to survive transient Supabase
+                        # errors — a failure here would leave the delivery
+                        # "pending" and cause a re-send on the next cycle.
+                        for _attempt in range(3):
+                            try:
+                                db.mark_delivery_sent(d["delivery_id"])
+                                stats.record_delivery_sent()
+                                break
+                            except Exception as mark_err:
+                                if _attempt < 2:
+                                    logger.warning(
+                                        f"mark_delivery_sent failed (attempt {_attempt + 1}/3): {mark_err}"
+                                    )
+                                    db.reset_client()
+                                    await asyncio.sleep(1)
+                                else:
+                                    logger.error(
+                                        f"Could not mark delivery {d['delivery_id']} as sent "
+                                        f"after 3 attempts — audio was already sent to user"
+                                    )
                     else:
                         db.mark_delivery_failed(d["delivery_id"])
                         stats.record_delivery_failed()

@@ -2,6 +2,16 @@
 
 ## 2026-02-19
 
+FIX: Duplicate Telegram messages — if `send_photo` succeeded but `send_voice` failed, the fallback was sending the voice AGAIN as a separate message (user received photo + separate audio = 2 messages per video); now retries the voice as a reply to the existing photo instead, and returns True to prevent re-delivery next cycle if retry also fails
+
+FIX: Duplicate deliveries on Supabase disconnect — if `mark_delivery_sent` threw after audio was already sent, the delivery stayed "pending" and was re-sent next cycle; now retries with reset_client up to 3 times before giving up
+
+FIX: Duplicate Telegram deliveries — when linking a new account to Telegram, `start_command` now disconnects all other profiles that had the same chat_id before linking the new one; one Telegram = one account maximum
+
+FIX: Delivery queue starvation — `get_pending_deliveries` fetched only the 10 oldest pending rows; if those had non-completed videos they blocked all deliveries forever; fix: fetch 5× more rows and stop after `limit` deliverable ones; also add `cleanup_undeliverable_deliveries()` called every 5 min to auto-discard deliveries for failed videos or disconnected users
+
+FIX: Whisper transcription — support long videos (>50 min) by splitting audio into ≤20 MB chunks with ffmpeg, transcribing each chunk with Groq, then joining results; previously failed with "audio_file_too_large"
+
 REFACTOR: Improve Telegram log bot readability — parse raw log lines into compact `HH:MM LEVEL  message` format with HTML bold/italic for errors/warnings; fix monitoring alerts that used Markdown v1 (`**bold**` was never rendering); switch all three files (log_bot.py, monitoring.py, bot_handler.py) to parse_mode=HTML
 
 FIX: Remove email/password signup — /signup now redirects to /login; all "Start Free" buttons point to /login (Google OAuth only)
