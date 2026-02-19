@@ -1,105 +1,102 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ExternalLink, Pencil, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ListsSection } from "@/components/dashboard/lists-section";
+import { Pencil, Star } from "lucide-react";
+import { CreateListButton } from "@/components/lists/create-list-button";
+import { FollowedListsSection } from "@/components/lists/followed-lists-section";
 
-export default async function DashboardListsPage() {
+const CATEGORIES = [
+  "Tech",
+  "Finance",
+  "Science",
+  "Gaming",
+  "Education",
+  "News",
+  "Entertainment",
+  "Health",
+  "Sports",
+  "Other",
+];
+
+function extractCount(val: unknown): number {
+  return (val as { count: number }[])[0]?.count ?? 0;
+}
+
+export default async function DashboardListsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const { category } = await searchParams;
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("subscription_status, trial_ends_at")
-    .eq("id", user.id)
-    .single();
-
-  const isPro =
-    profile?.subscription_status === "active" ||
-    (profile?.trial_ends_at != null &&
-      new Date(profile.trial_ends_at) > new Date());
-
-  // Followed lists
-  const { data: followedLists } = await supabase
-    .from("list_follows")
-    .select(
-      "list_id, channel_lists(id, name, description, category, created_by)",
-    )
-    .eq("user_id", user.id);
-
-  // My created lists with channel count
+  // My created lists
   const { data: myLists } = await supabase
     .from("channel_lists")
-    .select("id, name, description, category, list_channels(count)")
+    .select("id, name, category, list_channels(count)")
     .eq("created_by", user.id)
     .order("created_at", { ascending: false });
+
+  // Followed lists
+  const { data: followedRaw } = await supabase
+    .from("list_follows")
+    .select("list_id, channel_lists(id, name, category)")
+    .eq("user_id", user.id);
+
+  const followedItems = (followedRaw ?? []).map((item) => ({
+    list_id: item.list_id,
+    name:
+      (item.channel_lists as { name: string } | null)?.name ?? "Unknown list",
+    category:
+      (item.channel_lists as { category: string | null } | null)?.category ??
+      null,
+  }));
+
+  // Public discovery lists (excluding own)
+  const publicQuery = supabase
+    .from("channel_lists")
+    .select("id, name, category, list_channels(count), list_stars(count)")
+    .eq("is_public", true)
+    .neq("created_by", user.id);
+
+  const { data: publicLists } = category
+    ? await publicQuery.eq("category", category)
+    : await publicQuery;
+
+  const sortedPublic = (publicLists ?? [])
+    .map((l) => ({
+      id: l.id,
+      name: l.name,
+      category: l.category,
+      channelCount: extractCount(l.list_channels),
+      starCount: extractCount(l.list_stars),
+    }))
+    .sort((a, b) => b.starCount - a.starCount);
 
   const myListsMapped = (myLists ?? []).map((l) => ({
     id: l.id,
     name: l.name,
-    description: l.description,
     category: l.category,
-    channel_count:
-      (l.list_channels as unknown as { count: number }[])[0]?.count ?? 0,
+    channelCount: extractCount(l.list_channels),
   }));
 
   return (
-    <div className="space-y-8">
-      {/* Followed lists */}
-      <ListsSection
-        initialFollowedLists={
-          (followedLists ?? []) as Parameters<
-            typeof ListsSection
-          >[0]["initialFollowedLists"]
-        }
-        isPro={isPro}
-      />
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-base font-semibold">Lists</h1>
+        <CreateListButton />
+      </div>
 
-      {/* My created lists */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-semibold">My lists</h2>
-            <p className="text-muted-foreground text-xs">
-              Lists you created and published
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/lists">
-                <ExternalLink className="h-3.5 w-3.5" />
-                Discover
-              </Link>
-            </Button>
-            <Button size="sm" className="bg-red-600 hover:bg-red-500" asChild>
-              <Link href="/lists/create">
-                <Plus className="h-3.5 w-3.5" />
-                Create
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {myListsMapped.length === 0 ? (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] py-8 text-center">
-            <p className="text-sm font-medium">No lists created yet</p>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              Share curated YouTube channel collections with the community.
-            </p>
-            <Button
-              size="sm"
-              className="mt-4 bg-red-600 hover:bg-red-500"
-              asChild
-            >
-              <Link href="/lists/create">Create a list</Link>
-            </Button>
-          </div>
-        ) : (
+      {/* My lists */}
+      {myListsMapped.length > 0 && (
+        <section className="space-y-2">
+          <p className="text-muted-foreground text-xs font-medium">Mine</p>
           <div className="overflow-hidden rounded-xl border border-white/[0.06]">
             <div className="divide-y divide-white/[0.04]">
               {myListsMapped.map((list) => (
@@ -115,24 +112,88 @@ export default async function DashboardListsPage() {
                       {list.name}
                     </Link>
                     <p className="text-muted-foreground mt-0.5 text-[11px]">
-                      {list.channel_count} channel
-                      {list.channel_count !== 1 ? "s" : ""}
+                      {list.channelCount} ch
                       {list.category ? ` · ${list.category}` : ""}
                     </p>
                   </div>
                   <Link
                     href={`/lists/${list.id}/edit`}
-                    className="text-muted-foreground hover:text-foreground ml-3 flex shrink-0 items-center gap-1 text-xs transition-colors"
+                    className="text-muted-foreground hover:text-foreground ml-3 shrink-0 transition-colors"
                   >
                     <Pencil className="h-3.5 w-3.5" />
-                    Edit
                   </Link>
                 </div>
               ))}
             </div>
           </div>
+        </section>
+      )}
+
+      {/* Following */}
+      <FollowedListsSection initialItems={followedItems} />
+
+      {/* Discover */}
+      <section className="space-y-3">
+        <p className="text-muted-foreground text-xs font-medium">Discover</p>
+
+        {/* Category chips */}
+        <div className="flex flex-wrap gap-1.5">
+          <Link
+            href="/dashboard/lists"
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+              !category
+                ? "border-red-500/30 bg-red-500/[0.08] text-red-400"
+                : "text-muted-foreground border-white/[0.08] hover:border-white/20"
+            }`}
+          >
+            All
+          </Link>
+          {CATEGORIES.map((cat) => (
+            <Link
+              key={cat}
+              href={`/dashboard/lists?category=${cat}`}
+              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                category === cat
+                  ? "border-red-500/30 bg-red-500/[0.08] text-red-400"
+                  : "text-muted-foreground border-white/[0.08] hover:border-white/20"
+              }`}
+            >
+              {cat}
+            </Link>
+          ))}
+        </div>
+
+        {/* List rows */}
+        {sortedPublic.length === 0 ? (
+          <p className="text-muted-foreground py-8 text-center text-sm">
+            {category ? `No lists in ${category} yet.` : "No public lists yet."}
+          </p>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-white/[0.06]">
+            <div className="divide-y divide-white/[0.04]">
+              {sortedPublic.map((list) => (
+                <Link
+                  key={list.id}
+                  href={`/lists/${list.id}`}
+                  className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-white/[0.03]"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{list.name}</p>
+                    <p className="text-muted-foreground mt-0.5 text-[11px]">
+                      {list.channelCount} ch
+                      {list.category ? ` · ${list.category}` : ""}
+                    </p>
+                  </div>
+                  <div className="text-muted-foreground ml-3 flex shrink-0 items-center gap-1 text-xs">
+                    <Star className="h-3 w-3" />
+                    {list.starCount}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

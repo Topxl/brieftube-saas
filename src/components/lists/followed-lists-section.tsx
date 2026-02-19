@@ -1,0 +1,58 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { UnfollowButton } from "@/components/lists/unfollow-button";
+
+type FollowedItem = {
+  list_id: string;
+  name: string;
+  category: string | null;
+};
+
+export function FollowedListsSection({
+  initialItems,
+}: {
+  initialItems: FollowedItem[];
+}) {
+  const [items, setItems] = useState(initialItems);
+
+  if (items.length === 0) return null;
+
+  return (
+    <section className="space-y-2">
+      <p className="text-muted-foreground text-xs font-medium">Following</p>
+      <div className="overflow-hidden rounded-xl border border-white/[0.06]">
+        <div className="divide-y divide-white/[0.04]">
+          {items.map((item) => (
+            <div
+              key={item.list_id}
+              className="flex items-center justify-between px-4 py-3"
+            >
+              <Link
+                href={`/lists/${item.list_id}`}
+                className="hover:text-foreground min-w-0 truncate text-sm font-medium transition-colors"
+              >
+                {item.name}
+                {item.category && (
+                  <span className="text-muted-foreground ml-1.5 text-[11px] font-normal">
+                    {item.category}
+                  </span>
+                )}
+              </Link>
+              <UnfollowButton
+                listId={item.list_id}
+                listName={item.name}
+                onUnfollowed={() =>
+                  setItems((prev) =>
+                    prev.filter((i) => i.list_id !== item.list_id),
+                  )
+                }
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
