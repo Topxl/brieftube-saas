@@ -14,6 +14,44 @@ export type Database = {
   };
   public: {
     Tables: {
+      channel_lists: {
+        Row: {
+          category: string | null;
+          created_at: string | null;
+          created_by: string;
+          description: string | null;
+          id: string;
+          is_public: boolean;
+          name: string;
+        };
+        Insert: {
+          category?: string | null;
+          created_at?: string | null;
+          created_by: string;
+          description?: string | null;
+          id?: string;
+          is_public?: boolean;
+          name: string;
+        };
+        Update: {
+          category?: string | null;
+          created_at?: string | null;
+          created_by?: string;
+          description?: string | null;
+          id?: string;
+          is_public?: boolean;
+          name?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "channel_lists_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       deliveries: {
         Row: {
           created_at: string | null;
@@ -45,6 +83,107 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "deliveries_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      list_channels: {
+        Row: {
+          added_at: string | null;
+          channel_avatar_url: string | null;
+          channel_id: string;
+          channel_name: string;
+          id: string;
+          list_id: string;
+        };
+        Insert: {
+          added_at?: string | null;
+          channel_avatar_url?: string | null;
+          channel_id: string;
+          channel_name: string;
+          id?: string;
+          list_id: string;
+        };
+        Update: {
+          added_at?: string | null;
+          channel_avatar_url?: string | null;
+          channel_id?: string;
+          channel_name?: string;
+          id?: string;
+          list_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "list_channels_list_id_fkey";
+            columns: ["list_id"];
+            isOneToOne: false;
+            referencedRelation: "channel_lists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      list_follows: {
+        Row: {
+          followed_at: string | null;
+          list_id: string;
+          user_id: string;
+        };
+        Insert: {
+          followed_at?: string | null;
+          list_id: string;
+          user_id: string;
+        };
+        Update: {
+          followed_at?: string | null;
+          list_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "list_follows_list_id_fkey";
+            columns: ["list_id"];
+            isOneToOne: false;
+            referencedRelation: "channel_lists";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "list_follows_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      list_stars: {
+        Row: {
+          list_id: string;
+          starred_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          list_id: string;
+          starred_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          list_id?: string;
+          starred_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "list_stars_list_id_fkey";
+            columns: ["list_id"];
+            isOneToOne: false;
+            referencedRelation: "channel_lists";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "list_stars_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
@@ -243,6 +382,7 @@ export type Database = {
           channel_name: string;
           created_at: string | null;
           id: string;
+          list_id: string | null;
           source_type: string | null;
           user_id: string;
         };
@@ -253,6 +393,7 @@ export type Database = {
           channel_name: string;
           created_at?: string | null;
           id?: string;
+          list_id?: string | null;
           source_type?: string | null;
           user_id: string;
         };
@@ -263,10 +404,18 @@ export type Database = {
           channel_name?: string;
           created_at?: string | null;
           id?: string;
+          list_id?: string | null;
           source_type?: string | null;
           user_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "subscriptions_list_id_fkey";
+            columns: ["list_id"];
+            isOneToOne: false;
+            referencedRelation: "channel_lists";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "subscriptions_user_id_fkey";
             columns: ["user_id"];

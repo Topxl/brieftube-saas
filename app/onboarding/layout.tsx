@@ -28,17 +28,17 @@ export default async function OnboardingLayout({
   }
 
   return (
-    <div className="bg-background flex min-h-screen flex-col">
-      <header className="flex h-14 shrink-0 items-center px-4 md:px-6">
+    <div className="bg-background min-h-screen">
+      <header className="flex h-14 items-center px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2">
           <Image src="/logo.svg" alt="BriefTube" width={26} height={26} />
           <span className="text-sm font-semibold">BriefTube</span>
         </Link>
       </header>
 
-      <main className="flex flex-1 items-center justify-center px-4 py-8">
+      <div className="mx-auto max-w-lg px-4 pt-8 pb-16 md:pt-12">
         {children}
-      </main>
+      </div>
     </div>
   );
 }

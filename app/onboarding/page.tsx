@@ -14,9 +14,5 @@ export default async function OnboardingPage() {
 
   const initialVoice = profile?.tts_voice ?? "fr-FR-DeniseNeural";
 
-  return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-12">
-      <OnboardingWizard initialVoice={initialVoice} />
-    </div>
-  );
+  return <OnboardingWizard initialVoice={initialVoice} />;
 }
