@@ -8,8 +8,9 @@ import { LogOut, CheckCircle2 } from "lucide-react";
 
 type Props = {
   email: string;
-  isPro: boolean;
   isTrial: boolean;
+  isActivePro: boolean;
+  trialDaysLeft: number;
   hasStripeCustomer: boolean;
   initialTelegramConnected: boolean;
   initialVoice: string;
@@ -18,8 +19,9 @@ type Props = {
 
 export function ProfileContent({
   email,
-  isPro,
   isTrial,
+  isActivePro,
+  trialDaysLeft,
   hasStripeCustomer,
   initialTelegramConnected,
   initialVoice,
@@ -53,23 +55,23 @@ export function ProfileContent({
               <div>
                 <p className="text-sm font-medium">Plan</p>
                 <p className="text-muted-foreground text-[11px]">
-                  {isPro
+                  {isActivePro
                     ? "Pro — unlimited channels and lists"
                     : isTrial
-                      ? `Trial — ${maxChannels} channels max`
+                      ? `Trial — ${trialDaysLeft}d left · ${maxChannels} channels max`
                       : `Free — ${maxChannels} channels max`}
                 </p>
               </div>
               <span
                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase ${
-                  isPro
+                  isActivePro
                     ? "bg-red-600 text-white"
                     : isTrial
                       ? "border border-amber-500/30 bg-amber-500/10 text-amber-400"
                       : "text-muted-foreground border border-white/[0.08] bg-white/[0.06]"
                 }`}
               >
-                {isPro ? "Pro" : isTrial ? "Trial" : "Free"}
+                {isActivePro ? "Pro" : isTrial ? "Trial" : "Free"}
               </span>
             </div>
 
@@ -98,9 +100,13 @@ export function ProfileContent({
       <div className="space-y-3">
         <h2 className="text-sm font-semibold">Subscription</h2>
         <div className="overflow-hidden rounded-xl border border-white/[0.06]">
-          {!isPro ? (
+          {!isActivePro ? (
             <div className="p-5">
-              <p className="text-sm font-medium">Upgrade to Pro</p>
+              <p className="text-sm font-medium">
+                {isTrial
+                  ? `${trialDaysLeft} day${trialDaysLeft !== 1 ? "s" : ""} left on your trial — upgrade now to keep your Pro access`
+                  : "Upgrade to Pro"}
+              </p>
               <p className="text-muted-foreground mt-0.5 text-xs">
                 Unlimited channels, follow curated lists, priority processing.
               </p>

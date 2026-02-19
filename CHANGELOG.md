@@ -2,6 +2,11 @@
 
 ## 2026-02-19
 
+FIX: Trial users can now upgrade to paid Pro — show upgrade button when isTrial even though isPro is true
+FIX: Checkout preserves remaining trial days — passes trial_end to Stripe so user doesn't lose free days
+FIX: DB — handle_new_user trigger changed from 14 days to 7 days trial
+
+
 REFACTOR: Log bot — remplace l'interface commandes/logs bruts par un dashboard interactif à boutons Telegram : menu principal avec statut worker (🟢/🟡/🔴), stats temps réel Supabase, erreurs reformatées, activité récente, système, et alertes live push (erreurs + succès toutes les 20s via bouton toggle)
 
 FIX: Duplicate Telegram messages — if `send_photo` succeeded but `send_voice` failed, the fallback was sending the voice AGAIN as a separate message (user received photo + separate audio = 2 messages per video); now retries the voice as a reply to the existing photo instead, and returns True to prevent re-delivery next cycle if retry also fails

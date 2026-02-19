@@ -15,7 +15,7 @@ export async function POST() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("stripe_customer_id, email")
+    .select("stripe_customer_id, email, trial_ends_at")
     .eq("id", user.id)
     .single();
 
@@ -39,6 +39,13 @@ export async function POST() {
       .eq("id", user.id);
   }
 
+  // Carry over remaining trial days so the user doesn't lose them
+  const trialEndsAt = profile?.trial_ends_at;
+  const trialEnd =
+    trialEndsAt && new Date(trialEndsAt) > new Date()
+      ? Math.floor(new Date(trialEndsAt).getTime() / 1000)
+      : undefined;
+
   // Create checkout session
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
@@ -50,6 +57,7 @@ export async function POST() {
         quantity: 1,
       },
     ],
+    ...(trialEnd ? { subscription_data: { trial_end: trialEnd } } : {}),
     success_url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/dashboard/billing?success=true`,
     cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/pricing`,
     metadata: {
