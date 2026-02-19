@@ -2,7 +2,9 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+# override=True ensures .env file always takes precedence over exported shell variables,
+# so the canonical source of truth is always the .env file.
+load_dotenv(override=True)
 
 # Base paths
 BASE_DIR = Path(__file__).parent

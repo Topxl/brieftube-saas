@@ -1,3 +1,7 @@
+import { SiteConfig } from "@/site-config";
+
+const FREE = SiteConfig.freeChannelsLimit;
+
 export const landing = {
   nav: {
     howItWorks: "How it works",
@@ -11,7 +15,7 @@ export const landing = {
     menu: "Menu",
   },
   hero: {
-    badge: "Free up to 5 channels — No credit card needed",
+    badge: `Free up to ${FREE} channels — No credit card needed`,
     heading: "Stay on top of your YouTube channels",
     headingHighlight: "without watching a single video",
     subtitle:
@@ -125,7 +129,7 @@ export const landing = {
         name: "Free",
         description: "Try it out. No credit card needed.",
         features: [
-          "5 YouTube channels",
+          `${FREE} YouTube channels`,
           "AI audio summaries",
           "Telegram delivery",
           "Standard processing",
@@ -151,6 +155,7 @@ export const landing = {
   },
   faq: {
     heading: "Frequently asked questions",
+    priceQuestionFn: (price: string) => `Is it really only ${price}/month?`,
     items: [
       {
         question: "How does it work?",
@@ -158,7 +163,7 @@ export const landing = {
           "BriefTube monitors YouTube RSS feeds for new videos from your subscribed channels. When a new video is detected, our AI generates a detailed summary, converts it to natural-sounding audio, and sends it directly to your Telegram.",
       },
       {
-        question: "Is it really only $9/month?",
+        question: "",
         answer:
           "Yes! We keep costs extremely low by using efficient AI processing and lightweight infrastructure. No hidden fees, no surprise charges.",
       },
@@ -181,7 +186,7 @@ export const landing = {
   },
   finalCta: {
     heading: "Start receiving audio summaries in 2 minutes",
-    subtitle: "Free forever for up to 5 channels. No credit card required.",
+    subtitle: `Free forever for up to ${FREE} channels. No credit card required.`,
     ctaPrimary: "Sign Up Free",
     ctaSecondary: "Self-Host (Open Source)",
     loginText: "Already have an account?",

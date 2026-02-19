@@ -49,12 +49,15 @@ class WhisperTranscriber:
             True if successful, False otherwise
         """
         try:
+            # 64kbps is more than sufficient for Whisper speech recognition and
+            # keeps file size well under Groq's 25 MB limit (~54 min max at 64kbps).
+            # 192kbps would exceed the limit for any video longer than ~15 min.
             ydl_opts = {
                 'format': 'bestaudio/best',
                 'postprocessors': [{
                     'key': 'FFmpegExtractAudio',
                     'preferredcodec': 'mp3',
-                    'preferredquality': '192',
+                    'preferredquality': '64',
                 }],
                 'outtmpl': str(output_path.with_suffix('')),  # yt-dlp adds .mp3
                 'quiet': True,
@@ -114,6 +117,14 @@ class WhisperTranscriber:
             audio_file = audio_path.with_suffix('.mp3')
             file_size_mb = audio_file.stat().st_size / (1024 * 1024)
             logger.info(f"Audio downloaded: {file_size_mb:.2f} MB")
+
+            # Groq hard limit is 25 MB — fail early with a clear message
+            if file_size_mb > 24.5:
+                logger.error(
+                    f"Audio file too large for Groq API: {file_size_mb:.1f} MB > 24.5 MB. "
+                    "Video may be too long (>~50 min at 64kbps)."
+                )
+                return None, None, "audio_file_too_large", 0.0
 
             # Step 2: Transcribe with Groq Whisper API
             logger.info(f"Transcribing with Groq Whisper Large V3 Turbo (language: {language or 'auto-detect'})...")

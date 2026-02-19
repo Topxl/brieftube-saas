@@ -1,13 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { t } from "@/locales";
+import { formatCurrency } from "@/lib/format";
+import { logger } from "@/lib/logger";
 
 const tl = t.landing.faq;
 
+type PriceData = { amount: number; currency: string };
+
 export function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
+  const [proPrice, setProPrice] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/stripe/price")
+      .then(async (res) => res.json())
+      .then((data: PriceData) => {
+        if (data.amount) {
+          const { formatted, symbol } = formatCurrency(
+            data.amount,
+            data.currency,
+          );
+          setProPrice(
+            symbol === "$" ? `${symbol}${formatted}` : `${formatted}${symbol}`,
+          );
+        }
+      })
+      .catch((err) => logger.error("Failed to fetch price:", err));
+  }, []);
 
   return (
     <section id="faq" className="py-20">
@@ -29,7 +51,7 @@ export function FAQ() {
                   onClick={() => setOpen(open === i ? null : i)}
                   className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-medium"
                 >
-                  {faq.question}
+                  {i === 1 ? tl.priceQuestionFn(proPrice ?? "…") : faq.question}
                   <svg
                     className={`text-muted-foreground h-4 w-4 shrink-0 transition-transform duration-300 ${
                       open === i ? "rotate-180" : ""
