@@ -16,20 +16,26 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .single();
 
-  const isPro =
-    profile?.subscription_status === "active" ||
-    (profile?.trial_ends_at != null &&
-      new Date(profile.trial_ends_at) > new Date());
+  const isActivePro = profile?.subscription_status === "active";
 
   const isTrial =
     profile?.trial_ends_at != null &&
     new Date(profile.trial_ends_at) > new Date();
 
+  const trialEndsAt = profile?.trial_ends_at;
+  const trialDaysLeft =
+    isTrial && trialEndsAt
+      ? Math.ceil(
+          (new Date(trialEndsAt).getTime() - new Date().getTime()) / 86400000,
+        )
+      : 0;
+
   return (
     <ProfileContent
       email={user.email ?? ""}
-      isPro={isPro}
       isTrial={isTrial}
+      isActivePro={isActivePro}
+      trialDaysLeft={trialDaysLeft}
       hasStripeCustomer={!!profile?.stripe_customer_id}
       initialTelegramConnected={profile?.telegram_connected ?? false}
       initialVoice={profile?.tts_voice ?? "fr-FR-DeniseNeural"}
