@@ -48,7 +48,7 @@ export function Hero() {
             className="h-12 bg-red-600 px-8 text-base shadow-[0_0_30px_rgba(239,68,68,0.3)] transition-all duration-300 hover:bg-red-500 hover:shadow-[0_0_40px_rgba(239,68,68,0.4)]"
             asChild
           >
-            <Link href="/signup">{tl.ctaPrimary}</Link>
+            <Link href="/login">{tl.ctaPrimary}</Link>
           </Button>
           <Button
             size="lg"

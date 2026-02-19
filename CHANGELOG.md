@@ -2,6 +2,15 @@
 
 ## 2026-02-19
 
+FIX: Remove email/password signup — /signup now redirects to /login; all "Start Free" buttons point to /login (Google OAuth only)
+
+
+REFACTOR: Dashboard navigation — replace Billing nav item with Lists and Profile; update nav to show Dashboard, Lists, Profile; Desktop nav: logo + 3 links + plan badge + avatar circle linking to profile; remove email text and logout from header; move logout to Profile page
+
+FEATURE: Dashboard Lists page — shows followed lists with inline unfollow action, created lists with channel count, and buttons to discover public lists or create new ones
+
+FEATURE: Dashboard Profile page — unified profile section with account info (email, plan, session), Telegram/TTS voice delivery settings, and inline subscription management
+
 FIX: YouTube bulk import — pre-mark all existing videos as "skipped" before inserting subscriptions so the RSS scanner never processes historical videos; only manually added channels trigger the latest-video delivery
 
 FEATURE: Lists edit & delete — page /lists/[id]/edit avec modification nom/description/catégorie/chaînes, suppression de liste avec confirmation, et bouton "Import my subscriptions" sur la page de création pour pré-remplir depuis ses abonnements

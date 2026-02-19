@@ -28,7 +28,7 @@ export function FinalCTA() {
               className="h-12 bg-red-600 px-8 text-base shadow-[0_0_30px_rgba(239,68,68,0.3)] hover:bg-red-500"
               asChild
             >
-              <Link href="/signup">{tl.ctaPrimary}</Link>
+              <Link href="/login">{tl.ctaPrimary}</Link>
             </Button>
             <Button
               size="lg"

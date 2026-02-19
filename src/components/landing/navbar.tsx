@@ -63,7 +63,7 @@ export function Navbar() {
               className="bg-red-600 shadow-[0_0_20px_rgba(239,68,68,0.25)] hover:bg-red-500"
               asChild
             >
-              <Link href="/signup">{tl.startFree}</Link>
+              <Link href="/login">{tl.startFree}</Link>
             </Button>
           </div>
           <LandingMobileNav />

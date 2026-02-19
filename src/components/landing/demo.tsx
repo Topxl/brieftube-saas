@@ -111,7 +111,7 @@ export function Demo() {
                 className="w-full bg-red-600 hover:bg-red-500 sm:w-auto"
                 asChild
               >
-                <Link href="/signup">{tl.upsellCta}</Link>
+                <Link href="/login">{tl.upsellCta}</Link>
               </Button>
             </div>
           </div>

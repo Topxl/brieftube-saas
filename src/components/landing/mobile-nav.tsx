@@ -58,7 +58,7 @@ export function LandingMobileNav() {
             asChild
             onClick={() => setOpen(false)}
           >
-            <Link href="/signup">{tl.startFree}</Link>
+            <Link href="/login">{tl.startFree}</Link>
           </Button>
         </div>
       </SheetContent>
