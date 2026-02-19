@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { SiteConfig } from "@/site-config";
+import { cookies } from "next/headers";
+
+const REFERRAL_COOKIE = "brieftube_ref";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -20,7 +24,7 @@ export async function GET(request: Request) {
       if (user) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("trial_ends_at")
+          .select("trial_ends_at, referred_by")
           .eq("id", user.id)
           .single();
 
@@ -32,18 +36,59 @@ export async function GET(request: Request) {
             .update({ trial_ends_at: trialEnd.toISOString() })
             .eq("id", user.id);
         }
+
+        // Record referral if not already set
+        if (profile?.referred_by === null) {
+          const cookieStore = await cookies();
+          const refCode = cookieStore.get(REFERRAL_COOKIE)?.value;
+
+          if (refCode) {
+            const { data: referrer } = await supabase
+              .from("profiles")
+              .select("id")
+              .eq("referral_code", refCode)
+              .single();
+
+            if (referrer && referrer.id !== user.id) {
+              await supabase
+                .from("profiles")
+                .update({ referred_by: referrer.id })
+                .eq("id", user.id)
+                .is("referred_by", null);
+
+              const { error: insertError } = await supabase
+                .from("referrals")
+                .insert({ referrer_id: referrer.id, referee_id: user.id });
+
+              if (insertError && insertError.code !== "23505") {
+                logger.error("Failed to insert referral:", insertError);
+              } else {
+                logger.info("Referral recorded", {
+                  referrerId: referrer.id,
+                  refereeId: user.id,
+                });
+              }
+            }
+          }
+        }
       }
 
       const forwardedHost = request.headers.get("x-forwarded-host");
       const isLocalEnv = process.env.NODE_ENV === "development";
 
+      let redirectUrl: string;
       if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${next}`);
+        redirectUrl = `${origin}${next}`;
       } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
+        redirectUrl = `https://${forwardedHost}${next}`;
       } else {
-        return NextResponse.redirect(`${origin}${next}`);
+        redirectUrl = `${origin}${next}`;
       }
+
+      const response = NextResponse.redirect(redirectUrl);
+      // Clear the referral cookie after processing
+      response.cookies.delete(REFERRAL_COOKIE);
+      return response;
     }
   }
 

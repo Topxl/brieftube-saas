@@ -1,3 +1,4 @@
+import { SiteConfig } from "@/site-config";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -155,7 +156,7 @@ export async function GET(request: NextRequest) {
     profile?.subscription_status === "active" ||
     (profile?.trial_ends_at != null &&
       new Date(profile.trial_ends_at) > new Date());
-  const maxActiveChannels = profile?.max_channels ?? 3;
+  const maxActiveChannels = profile?.max_channels ?? SiteConfig.freeChannelsLimit;
   const existingActiveCount = (existingSubsRes.data ?? []).filter(
     (s) => s.active,
   ).length;

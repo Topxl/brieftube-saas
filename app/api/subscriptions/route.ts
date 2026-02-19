@@ -1,3 +1,4 @@
+import { SiteConfig } from "@/site-config";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { getYouTubeChannelInfo } from "@/lib/youtube";
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
     .eq("user_id", user.id)
     .eq("active", true);
 
-  const maxActiveChannels = profile?.max_channels ?? 3;
+  const maxActiveChannels = profile?.max_channels ?? SiteConfig.freeChannelsLimit;
   const isPro =
     profile?.subscription_status === "active" ||
     (profile?.trial_ends_at != null &&
@@ -341,7 +342,7 @@ export async function PATCH(request: NextRequest) {
       profile?.subscription_status === "active" ||
       (profile?.trial_ends_at != null &&
         new Date(profile.trial_ends_at) > new Date());
-    const maxActiveChannels = profile?.max_channels ?? 3;
+    const maxActiveChannels = profile?.max_channels ?? SiteConfig.freeChannelsLimit;
 
     if (!isPro) {
       const { count } = await supabase

@@ -328,6 +328,8 @@ export type Database = {
           max_channels: number | null;
           onboarding_completed: boolean | null;
           preferred_language: string | null;
+          referral_code: string | null;
+          referred_by: string | null;
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
           subscription_status: string | null;
@@ -345,6 +347,8 @@ export type Database = {
           max_channels?: number | null;
           onboarding_completed?: boolean | null;
           preferred_language?: string | null;
+          referral_code?: string | null;
+          referred_by?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           subscription_status?: string | null;
@@ -362,6 +366,8 @@ export type Database = {
           max_channels?: number | null;
           onboarding_completed?: boolean | null;
           preferred_language?: string | null;
+          referral_code?: string | null;
+          referred_by?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           subscription_status?: string | null;
@@ -372,7 +378,60 @@ export type Database = {
           tts_voice?: string | null;
           updated_at?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey";
+            columns: ["referred_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      referrals: {
+        Row: {
+          created_at: string;
+          id: string;
+          referee_id: string;
+          referrer_id: string;
+          reward_type: string | null;
+          rewarded_at: string | null;
+          status: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          referee_id: string;
+          referrer_id: string;
+          reward_type?: string | null;
+          rewarded_at?: string | null;
+          status?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          referee_id?: string;
+          referrer_id?: string;
+          reward_type?: string | null;
+          rewarded_at?: string | null;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referee_id_fkey";
+            columns: ["referee_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey";
+            columns: ["referrer_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       subscriptions: {
         Row: {

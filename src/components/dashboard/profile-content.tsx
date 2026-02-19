@@ -3,8 +3,17 @@
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { DeliverySection } from "@/components/dashboard/delivery-section";
+import { ReferralSection } from "@/components/dashboard/referral-section";
 import { Button } from "@/components/ui/button";
 import { LogOut, CheckCircle2 } from "lucide-react";
+
+type ReferralRow = {
+  maskedEmail: string;
+  status: string;
+  rewardType: string | null;
+  createdAt: string;
+  rewardedAt: string | null;
+};
 
 type Props = {
   email: string;
@@ -15,6 +24,8 @@ type Props = {
   initialTelegramConnected: boolean;
   initialVoice: string;
   maxChannels: number;
+  referralCode?: string;
+  referrals?: ReferralRow[];
 };
 
 export function ProfileContent({
@@ -26,6 +37,8 @@ export function ProfileContent({
   initialTelegramConnected,
   initialVoice,
   maxChannels,
+  referralCode,
+  referrals,
 }: Props) {
   const router = useRouter();
   const supabase = createClient();
@@ -164,6 +177,12 @@ export function ProfileContent({
           )}
         </div>
       </div>
+
+      {/* Referral */}
+      <ReferralSection
+        referralCode={referralCode ?? ""}
+        referrals={referrals ?? []}
+      />
     </div>
   );
 }

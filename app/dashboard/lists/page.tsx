@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Pencil, Star } from "lucide-react";
 import { CreateListButton } from "@/components/lists/create-list-button";
 import { FollowedListsSection } from "@/components/lists/followed-lists-section";
+import { ShareListButton } from "@/components/lists/share-list-button";
 
 const CATEGORIES = [
   "Tech",
@@ -35,12 +36,21 @@ export default async function DashboardListsPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // My created lists
-  const { data: myLists } = await supabase
-    .from("channel_lists")
-    .select("id, name, category, list_channels(count)")
-    .eq("created_by", user.id)
-    .order("created_at", { ascending: false });
+  // Fetch referral code and my created lists in parallel
+  const [{ data: myLists }, { data: profileData }] = await Promise.all([
+    supabase
+      .from("channel_lists")
+      .select("id, name, category, list_channels(count)")
+      .eq("created_by", user.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("profiles")
+      .select("referral_code")
+      .eq("id", user.id)
+      .single(),
+  ]);
+
+  const referralCode = profileData?.referral_code ?? null;
 
   // Followed lists
   const { data: followedRaw } = await supabase
@@ -116,12 +126,18 @@ export default async function DashboardListsPage({
                       {list.category ? ` · ${list.category}` : ""}
                     </p>
                   </div>
-                  <Link
-                    href={`/lists/${list.id}/edit`}
-                    className="text-muted-foreground hover:text-foreground ml-3 shrink-0 transition-colors"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Link>
+                  <div className="ml-3 flex shrink-0 items-center gap-3">
+                    <ShareListButton
+                      listId={list.id}
+                      referralCode={referralCode}
+                    />
+                    <Link
+                      href={`/lists/${list.id}/edit`}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>

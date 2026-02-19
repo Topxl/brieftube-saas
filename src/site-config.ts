@@ -1,7 +1,8 @@
 export const SiteConfig = {
   title: "BriefTube",
-  freeChannelsLimit: 5,
+  freeChannelsLimit: 3,
   trialDays: 7,
+  defaultTtsVoice: "fr-FR-DeniseNeural",
   description:
     "YouTube videos, summarized as audio, delivered to your Telegram",
   prodUrl: "https://brieftube.app",
@@ -20,6 +21,18 @@ export const SiteConfig = {
     website: "https://melvynx.com",
     twitter: "https://twitter.com/melvyn_me",
     name: "Melvynx",
+  },
+  referral: {
+    /** Name of the tracking cookie set when a visitor arrives via ?ref= */
+    cookieName: "brieftube_ref",
+    /** How long the referral cookie persists (days) */
+    cookieTtlDays: 30,
+    /** Fraction of the monthly invoice credited to the referrer (0.20 = 20%) */
+    monthlyRewardFraction: 0.2,
+    /** Number of months to credit for an annual subscription referral */
+    annualRewardMonths: 1,
+    /** Stripe credit currency */
+    currency: "usd",
   },
   features: {
     /**

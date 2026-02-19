@@ -127,6 +127,76 @@ const checkoutSessionCompleted = async (
     .eq("id", profile.id);
 
   logger.info(`Subscription activated for user: ${profile.id}`);
+
+  // Reward referrer if applicable
+  const { data: subscriberProfile } = await supabase
+    .from("profiles")
+    .select("id, referred_by")
+    .eq("stripe_customer_id", customerId)
+    .single();
+
+  if (subscriberProfile?.referred_by) {
+    const { data: referral } = await supabase
+      .from("referrals")
+      .select("id, referrer_id, status")
+      .eq("referee_id", subscriberProfile.id)
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (referral) {
+      const interval =
+        stripeSubscription.items.data[0]?.plan?.interval ?? "month";
+      const amountTotal = session.amount_total ?? 0;
+      const creditAmount =
+        interval === "year"
+          ? Math.round(amountTotal / 12)
+          : Math.round(amountTotal * 0.2);
+      const rewardType = interval === "year" ? "free_month" : "discount_20pct";
+
+      const { data: referrer } = await supabase
+        .from("profiles")
+        .select("email, stripe_customer_id")
+        .eq("id", referral.referrer_id)
+        .single();
+
+      let referrerCustomerId = referrer?.stripe_customer_id;
+      if (!referrerCustomerId && referrer?.email) {
+        const customer = await stripe.customers.create({
+          email: referrer.email,
+          metadata: { userId: referral.referrer_id },
+        });
+        referrerCustomerId = customer.id;
+        await supabase
+          .from("profiles")
+          .update({ stripe_customer_id: referrerCustomerId })
+          .eq("id", referral.referrer_id);
+      }
+
+      if (referrerCustomerId && creditAmount > 0) {
+        await stripe.customers.createBalanceTransaction(referrerCustomerId, {
+          amount: -creditAmount,
+          currency: "usd",
+          description: `Referral reward (${rewardType}) — user converted`,
+        });
+
+        await supabase
+          .from("referrals")
+          .update({
+            status: "rewarded",
+            reward_type: rewardType,
+            rewarded_at: new Date().toISOString(),
+          })
+          .eq("id", referral.id);
+
+        logger.info("Referral rewarded", {
+          referrerId: referral.referrer_id,
+          refereeId: subscriberProfile.id,
+          creditAmount,
+          rewardType,
+        });
+      }
+    }
+  }
 };
 
 const customerSubscriptionUpdated = async (

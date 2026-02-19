@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Youtube } from "lucide-react";
 import { ListActions } from "@/components/lists/list-actions";
+import { ShareListButton } from "@/components/lists/share-list-button";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -39,8 +40,10 @@ export default async function ListDetailPage({ params }: Props) {
   let starred = false;
   let following = false;
 
+  let referralCode: string | null = null;
+
   if (user) {
-    const [starRow, followRow] = await Promise.all([
+    const [starRow, followRow, profileRow] = await Promise.all([
       supabase
         .from("list_stars")
         .select("user_id")
@@ -53,9 +56,15 @@ export default async function ListDetailPage({ params }: Props) {
         .eq("user_id", user.id)
         .eq("list_id", id)
         .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("referral_code")
+        .eq("id", user.id)
+        .single(),
     ]);
     starred = !!starRow.data;
     following = !!followRow.data;
+    referralCode = profileRow.data?.referral_code ?? null;
   }
 
   const channels = list.list_channels as {
@@ -77,14 +86,19 @@ export default async function ListDetailPage({ params }: Props) {
             <ArrowLeft className="h-3.5 w-3.5" />
             Lists
           </Link>
-          {user && list.created_by === user.id && (
-            <Link
-              href={`/lists/${id}/edit`}
-              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
-            >
-              Edit list
-            </Link>
-          )}
+          <div className="flex items-center gap-3">
+            {user && (
+              <ShareListButton listId={id} referralCode={referralCode} />
+            )}
+            {user && list.created_by === user.id && (
+              <Link
+                href={`/lists/${id}/edit`}
+                className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+              >
+                Edit list
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

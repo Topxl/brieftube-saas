@@ -1,3 +1,4 @@
+import { SiteConfig } from "@/site-config";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -38,7 +39,7 @@ export default async function DashboardPage() {
     profile.subscription_status === "active" ||
     (profile.trial_ends_at != null &&
       new Date(profile.trial_ends_at) > new Date());
-  const maxChannels = profile.max_channels ?? 3;
+  const maxChannels = profile.max_channels ?? SiteConfig.freeChannelsLimit;
 
   // Trial logic — Server Component, Date.now() is safe here (not a client hook)
   const trialEndsAt = profile.trial_ends_at ?? null;

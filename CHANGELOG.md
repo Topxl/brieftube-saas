@@ -2,10 +2,14 @@
 
 ## 2026-02-19
 
+FEATURE: Referral system — referral_code on profiles, referrals table, 30-day cookie tracking, reward on Stripe checkout (20% monthly / 1 free month annual), ReferralSection on profile page, ShareListButton on list pages
+
 FIX: Trial users can now upgrade to paid Pro — show upgrade button when isTrial even though isPro is true
 FIX: Checkout preserves remaining trial days — passes trial_end to Stripe so user doesn't lose free days
 FIX: DB — handle_new_user trigger changed from 14 days to 7 days trial
 REFACTOR: Trial duration moved from DB trigger to SiteConfig.trialDays — change once in site-config.ts, applies everywhere
+REFACTOR: SiteConfig.freeChannelsLimit aligned to 3 (was 5 on landing, 2 in DB trigger, 3 as DB default) — all ?? 3 magic numbers replaced
+REFACTOR: SiteConfig.defaultTtsVoice added — replaces hardcoded "fr-FR-DeniseNeural" strings in code
 
 
 REFACTOR: Log bot — remplace l'interface commandes/logs bruts par un dashboard interactif à boutons Telegram : menu principal avec statut worker (🟢/🟡/🔴), stats temps réel Supabase, erreurs reformatées, activité récente, système, et alertes live push (erreurs + succès toutes les 20s via bouton toggle)
