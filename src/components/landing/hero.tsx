@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { t } from "@/locales";
+
+const tl = t.landing.hero;
 
 export function Hero() {
   return (
@@ -24,20 +27,19 @@ export function Hero() {
         <div className="mb-3 flex flex-col items-center gap-2">
           <div className="text-muted-foreground inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-1.5 text-sm backdrop-blur-sm">
             <span className="inline-block h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-            Gratuit jusqu'à 2 chaînes — Sans carte bancaire
+            {tl.badge}
           </div>
         </div>
 
         <h1 className="font-display text-4xl leading-tight font-bold tracking-tight md:text-6xl md:leading-[1.1]">
-          Reste au courant de tes chaînes YouTube{" "}
+          {tl.heading}{" "}
           <span className="bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
-            sans regarder une seule vidéo
+            {tl.headingHighlight}
           </span>
         </h1>
 
         <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg md:text-xl">
-          BriefTube surveille tes chaînes, génère un résumé IA en audio, et
-          l'envoie directement sur ton Telegram. Automatiquement.
+          {tl.subtitle}
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -46,7 +48,7 @@ export function Hero() {
             className="h-12 bg-red-600 px-8 text-base shadow-[0_0_30px_rgba(239,68,68,0.3)] transition-all duration-300 hover:bg-red-500 hover:shadow-[0_0_40px_rgba(239,68,68,0.4)]"
             asChild
           >
-            <Link href="/signup">Recevoir mes résumés gratuitement</Link>
+            <Link href="/signup">{tl.ctaPrimary}</Link>
           </Button>
           <Button
             size="lg"
@@ -54,14 +56,12 @@ export function Hero() {
             className="h-12 px-8 text-base"
             asChild
           >
-            <a href="#demo">Tester sans créer de compte</a>
+            <a href="#demo">{tl.ctaSecondary}</a>
           </Button>
         </div>
 
         {/* Social proof */}
-        <p className="text-muted-foreground mt-5 text-sm">
-          Sans carte bancaire · Annulation à tout moment · 14 jours Pro offerts
-        </p>
+        <p className="text-muted-foreground mt-5 text-sm">{tl.socialProof}</p>
 
         {/* Telegram mockup */}
         <div
@@ -75,17 +75,17 @@ export function Hero() {
               </div>
               <div className="text-left">
                 <p className="text-sm font-medium">BriefTube</p>
-                <p className="text-muted-foreground text-xs">bot</p>
+                <p className="text-muted-foreground text-xs">
+                  {tl.mockupBotRole}
+                </p>
               </div>
             </div>
             <div className="space-y-3">
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.04] p-3">
                 <p className="text-muted-foreground text-xs font-medium">
-                  Fireship
+                  {tl.mockupVideo1Channel}
                 </p>
-                <p className="text-sm font-medium">
-                  God-Tier Developer Roadmap
-                </p>
+                <p className="text-sm font-medium">{tl.mockupVideo1Title}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600/20 text-red-500">
                     <svg
@@ -99,14 +99,16 @@ export function Hero() {
                   <div className="h-1 flex-1 rounded-full bg-white/[0.08]">
                     <div className="h-1 w-2/3 rounded-full bg-red-500" />
                   </div>
-                  <span className="text-muted-foreground text-xs">2:34</span>
+                  <span className="text-muted-foreground text-xs">
+                    {tl.mockupVideo1Duration}
+                  </span>
                 </div>
               </div>
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.04] p-3">
                 <p className="text-muted-foreground text-xs font-medium">
-                  Huberman Lab
+                  {tl.mockupVideo2Channel}
                 </p>
-                <p className="text-sm font-medium">How to Improve Your Sleep</p>
+                <p className="text-sm font-medium">{tl.mockupVideo2Title}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600/20 text-red-500">
                     <svg
@@ -120,7 +122,9 @@ export function Hero() {
                   <div className="h-1 flex-1 rounded-full bg-white/[0.08]">
                     <div className="h-1 w-1/3 rounded-full bg-red-500" />
                   </div>
-                  <span className="text-muted-foreground text-xs">4:12</span>
+                  <span className="text-muted-foreground text-xs">
+                    {tl.mockupVideo2Duration}
+                  </span>
                 </div>
               </div>
             </div>

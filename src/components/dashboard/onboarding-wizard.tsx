@@ -7,7 +7,15 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Check, Loader2, ArrowRight, ArrowLeft } from "lucide-react";
+import {
+  Check,
+  Loader2,
+  ArrowRight,
+  ArrowLeft,
+  Youtube,
+  Headphones,
+  Send,
+} from "lucide-react";
 import type { Tables } from "@/types/supabase";
 
 type Subscription = Tables<"subscriptions">;
@@ -38,6 +46,7 @@ export function OnboardingWizard({ initialVoice }: Props) {
   const [url, setUrl] = useState("");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
+  const [showManualAdd, setShowManualAdd] = useState(false);
   const [voice, setVoice] = useState(initialVoice);
   const [savingVoice, setSavingVoice] = useState(false);
   const [connectToken, setConnectToken] = useState("");
@@ -200,46 +209,76 @@ export function OnboardingWizard({ initialVoice }: Props) {
       {/* Step 1: Add a source */}
       {step === 1 && (
         <div className="space-y-6">
-          <div>
-            <p className="text-muted-foreground mb-1 text-sm font-medium">
-              Step 1 of 3
-            </p>
-            <h1 className="text-2xl font-bold">
-              Which channel do you want to follow?
-            </h1>
-            <p className="text-muted-foreground mt-1.5 text-sm">
-              Paste a YouTube link to get started. You can add more later.
-            </p>
+          <div className="space-y-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/[0.08]">
+              <Youtube className="h-7 w-7 text-red-400" />
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-1 text-sm font-medium">
+                Step 1 of 3
+              </p>
+              <h1 className="text-2xl font-bold">Import your subscriptions</h1>
+              <p className="text-muted-foreground mt-1.5 text-sm">
+                Connect your YouTube account to import all your channels in one
+                click.
+              </p>
+            </div>
           </div>
 
-          <form
-            onSubmit={(e) => void addSource(e)}
-            className="flex gap-2"
-            suppressHydrationWarning
+          {/* PRIMARY: YouTube import */}
+          <a
+            href="/api/youtube/auth"
+            className="flex w-full items-center justify-center gap-3 rounded-xl bg-red-600 px-4 py-3.5 text-sm font-semibold text-white shadow-[0_0_24px_rgba(239,68,68,0.2)] transition-all hover:bg-red-500 hover:shadow-[0_0_32px_rgba(239,68,68,0.3)]"
           >
-            <Input
-              type="text"
-              value={url}
-              onChange={(e) => {
-                setUrl(e.target.value);
-                setAddError("");
-              }}
-              placeholder="youtube.com/@mkbhd"
-              className="flex-1"
-              autoComplete="off"
-              data-1p-ignore
-              data-lpignore="true"
-              suppressHydrationWarning
-            />
-            <Button
-              type="submit"
-              disabled={adding || !url.trim()}
-              className="shrink-0 bg-red-600 hover:bg-red-500"
-              suppressHydrationWarning
+            <Youtube className="h-5 w-5" />
+            Import from YouTube
+          </a>
+
+          {/* SECONDARY: manual add toggle */}
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setShowManualAdd((v) => !v)}
+              className="text-muted-foreground hover:text-foreground w-full text-center text-xs transition-colors"
             >
-              {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add"}
-            </Button>
-          </form>
+              {showManualAdd ? "Hide manual add" : "Or add a channel manually"}
+            </button>
+
+            {showManualAdd && (
+              <form
+                onSubmit={(e) => void addSource(e)}
+                className="flex gap-2"
+                suppressHydrationWarning
+              >
+                <Input
+                  type="text"
+                  value={url}
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                    setAddError("");
+                  }}
+                  placeholder="youtube.com/@mkbhd"
+                  className="flex-1"
+                  autoComplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
+                  suppressHydrationWarning
+                />
+                <Button
+                  type="submit"
+                  disabled={adding || !url.trim()}
+                  className="shrink-0 bg-red-600 hover:bg-red-500"
+                  suppressHydrationWarning
+                >
+                  {adding ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Add"
+                  )}
+                </Button>
+              </form>
+            )}
+          </div>
 
           {addError && <p className="text-xs text-red-400">{addError}</p>}
 
@@ -282,13 +321,7 @@ export function OnboardingWizard({ initialVoice }: Props) {
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-2">
-            <a
-              href="/api/youtube/auth"
-              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
-            >
-              Import from YouTube instead
-            </a>
+          <div className="flex justify-end pt-2">
             <Button
               onClick={() => setStep(2)}
               disabled={sources.length === 0}
@@ -304,14 +337,19 @@ export function OnboardingWizard({ initialVoice }: Props) {
       {/* Step 2: Choose voice */}
       {step === 2 && (
         <div className="space-y-6">
-          <div>
-            <p className="text-muted-foreground mb-1 text-sm font-medium">
-              Step 2 of 3
-            </p>
-            <h1 className="text-2xl font-bold">Which voice do you prefer?</h1>
-            <p className="text-muted-foreground mt-1.5 text-sm">
-              Your summaries will be read aloud in this voice.
-            </p>
+          <div className="space-y-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-500/20 bg-violet-500/[0.08]">
+              <Headphones className="h-7 w-7 text-violet-400" />
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-1 text-sm font-medium">
+                Step 2 of 3
+              </p>
+              <h1 className="text-2xl font-bold">Which voice do you prefer?</h1>
+              <p className="text-muted-foreground mt-1.5 text-sm">
+                Your summaries will be read aloud in this voice.
+              </p>
+            </div>
           </div>
 
           <div className="grid gap-1.5 sm:grid-cols-2">
@@ -372,14 +410,19 @@ export function OnboardingWizard({ initialVoice }: Props) {
       {/* Step 3: Connect Telegram */}
       {step === 3 && (
         <div className="space-y-6">
-          <div>
-            <p className="text-muted-foreground mb-1 text-sm font-medium">
-              Step 3 of 3
-            </p>
-            <h1 className="text-2xl font-bold">Connect Telegram</h1>
-            <p className="text-muted-foreground mt-1.5 text-sm">
-              Your audio summaries will be delivered automatically.
-            </p>
+          <div className="space-y-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-sky-500/20 bg-sky-500/[0.08]">
+              <Send className="h-7 w-7 text-sky-400" />
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-1 text-sm font-medium">
+                Step 3 of 3
+              </p>
+              <h1 className="text-2xl font-bold">Connect Telegram</h1>
+              <p className="text-muted-foreground mt-1.5 text-sm">
+                Your audio summaries will be delivered automatically.
+              </p>
+            </div>
           </div>
 
           {telegramConnected ? (

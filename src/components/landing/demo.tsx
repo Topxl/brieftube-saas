@@ -5,6 +5,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { t } from "@/locales";
+
+const tl = t.landing.demo;
 
 type DemoResult = {
   videoId: string;
@@ -35,7 +38,7 @@ export function Demo() {
     const data = (await res.json()) as DemoResult & { error?: string };
 
     if (!res.ok || data.error) {
-      setError(data.error ?? "Une erreur est survenue.");
+      setError(data.error ?? tl.error);
     } else {
       setResult(data);
     }
@@ -46,14 +49,12 @@ export function Demo() {
     <section id="demo" className="py-20 md:py-28">
       <div className="mx-auto max-w-2xl px-6 text-center">
         <p className="text-muted-foreground mb-2 text-sm font-medium tracking-wider uppercase">
-          Essaie maintenant
+          {tl.label}
         </p>
         <h2 className="font-display mb-4 text-3xl font-bold tracking-tight md:text-4xl">
-          Colle n'importe quelle URL YouTube
+          {tl.heading}
         </h2>
-        <p className="text-muted-foreground mb-8 text-base">
-          Sans créer de compte. On génère le résumé en quelques secondes.
-        </p>
+        <p className="text-muted-foreground mb-8 text-base">{tl.subtitle}</p>
 
         <form
           onSubmit={handleSubmit}
@@ -64,7 +65,7 @@ export function Demo() {
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://youtube.com/watch?v=..."
+            placeholder={tl.placeholder}
             className="flex-1"
             disabled={loading}
             suppressHydrationWarning
@@ -75,7 +76,7 @@ export function Demo() {
             className="shrink-0 bg-red-600 hover:bg-red-500"
             suppressHydrationWarning
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Résumer"}
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : tl.submit}
           </Button>
         </form>
 
@@ -104,26 +105,20 @@ export function Demo() {
             </p>
 
             <div className="mt-6 rounded-lg border border-red-500/20 bg-red-500/[0.05] p-4">
-              <p className="mb-3 text-sm font-medium">
-                Tu veux recevoir ça automatiquement en audio sur Telegram ?
-              </p>
+              <p className="mb-3 text-sm font-medium">{tl.upsellText}</p>
               <Button
                 size="sm"
                 className="w-full bg-red-600 hover:bg-red-500 sm:w-auto"
                 asChild
               >
-                <Link href="/signup">
-                  Créer un compte gratuit — 14 jours Pro offerts
-                </Link>
+                <Link href="/signup">{tl.upsellCta}</Link>
               </Button>
             </div>
           </div>
         )}
 
         {!result && !loading && (
-          <p className="text-muted-foreground mt-4 text-xs">
-            3 essais gratuits · Fonctionne sur les vidéos avec sous-titres
-          </p>
+          <p className="text-muted-foreground mt-4 text-xs">{tl.hint}</p>
         )}
       </div>
     </section>

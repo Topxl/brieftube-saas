@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { formatCurrency } from "@/lib/format";
 import { logger } from "@/lib/logger";
+import { t } from "@/locales";
+
+const tl = t.landing.pricing;
 
 type PriceData = {
   amount: number;
@@ -16,35 +19,18 @@ type PriceData = {
 
 const plans = [
   {
-    name: "Free",
+    key: "free" as const,
     price: "0",
     isPro: false,
-    description: "Try it out. No credit card needed.",
-    features: [
-      "5 YouTube channels",
-      "AI audio summaries",
-      "Telegram delivery",
-      "Standard processing",
-    ],
-    cta: "Start Free",
-    href: "/login",
     highlighted: false,
+    href: "/login",
   },
   {
-    name: "Pro",
+    key: "pro" as const,
     price: "9",
     isPro: true,
-    description: "For power users who follow everything.",
-    features: [
-      "Unlimited channels",
-      "Priority processing",
-      "Choose your TTS voice",
-      "No branding",
-      "Early access to new features",
-    ],
-    cta: "Go Pro",
-    href: "/login",
     highlighted: true,
+    href: "/login",
   },
 ];
 
@@ -61,32 +47,36 @@ export function Pricing() {
       })
       .catch((err) => logger.error("Failed to fetch price:", err));
   }, []);
+
   return (
     <section id="pricing" className="py-20">
       <div className="mx-auto max-w-4xl px-6">
         <ScrollReveal>
           <h2 className="font-display text-center text-2xl font-bold md:text-3xl">
-            Simple pricing
+            {tl.heading}
           </h2>
           <p className="text-muted-foreground mt-3 text-center">
-            Start free. Upgrade when you need more. Cancel anytime.
+            {tl.subtitle}
           </p>
         </ScrollReveal>
 
         <ScrollReveal delay={150}>
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             {plans.map((plan) => {
+              const planData = tl.plans[plan.key];
               const displayPrice =
                 plan.isPro && proPriceData
                   ? formatCurrency(proPriceData.amount, proPriceData.currency)
                   : { formatted: plan.price, symbol: "" };
 
               const interval =
-                plan.isPro && proPriceData ? proPriceData.interval : "month";
+                plan.isPro && proPriceData
+                  ? proPriceData.interval
+                  : tl.perMonth;
 
               return (
                 <Card
-                  key={plan.name}
+                  key={plan.key}
                   className={`relative transition-all duration-300 hover:-translate-y-1 ${
                     plan.highlighted
                       ? "border-red-500/20 shadow-[0_8px_32px_rgba(239,68,68,0.1)] hover:shadow-[0_12px_48px_rgba(239,68,68,0.15)]"
@@ -96,12 +86,12 @@ export function Pricing() {
                   {plan.highlighted && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <span className="inline-flex items-center rounded-full bg-gradient-to-r from-red-600 to-orange-500 px-3 py-1 text-xs font-medium text-white shadow-[0_0_16px_rgba(239,68,68,0.3)]">
-                        Most Popular
+                        {tl.mostPopular}
                       </span>
                     </div>
                   )}
                   <CardHeader>
-                    <CardTitle className="text-lg">{plan.name}</CardTitle>
+                    <CardTitle className="text-lg">{planData.name}</CardTitle>
                     <div className="flex items-baseline gap-1">
                       {displayPrice.symbol === "$" ? (
                         <>
@@ -126,12 +116,12 @@ export function Pricing() {
                       )}
                     </div>
                     <p className="text-muted-foreground text-sm">
-                      {plan.description}
+                      {planData.description}
                     </p>
                   </CardHeader>
                   <CardContent>
                     <ul className="mb-6 space-y-3">
-                      {plan.features.map((feature) => (
+                      {planData.features.map((feature) => (
                         <li
                           key={feature}
                           className="flex items-center gap-2 text-sm"
@@ -162,7 +152,7 @@ export function Pricing() {
                       variant={plan.highlighted ? "destructive" : "outline"}
                       asChild
                     >
-                      <Link href={plan.href}>{plan.cta}</Link>
+                      <Link href={plan.href}>{planData.cta}</Link>
                     </Button>
                   </CardContent>
                 </Card>
@@ -172,16 +162,16 @@ export function Pricing() {
         </ScrollReveal>
 
         <p className="text-muted-foreground mt-8 text-center text-sm">
-          Prefer to self-host?{" "}
+          {tl.selfHostPrefix}{" "}
           <a
             href="https://github.com/Topxl/BriefTube#self-hosting"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-foreground underline"
           >
-            Deploy with Docker in 5 minutes
+            {tl.selfHostLink}
           </a>{" "}
-          &mdash; it&apos;s open source.
+          &mdash; {tl.selfHostSuffix}
         </p>
       </div>
     </section>

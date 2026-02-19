@@ -2,6 +2,16 @@
 
 ## 2026-02-19
 
+REFACTOR: Extract all hardcoded strings into locale system — created 4 locale files (landing, dashboard, auth) with 15+ components using centralized translations
+
+## Previous
+
+FIX: Worker Whisper fallback — fix critical bug where YouTube IP-block caused early return before Whisper was tried; fallback now always triggers correctly
+FIX: Worker Whisper bitrate — lower MP3 quality from 192kbps to 64kbps so 19-min videos are ~8 MB instead of 25 MB (Groq API limit is 25 MB)
+FIX: Worker Whisper size guard — add explicit 24.5 MB pre-check before Groq API call to avoid silent 413 errors
+FIX: Worker config — use load_dotenv(override=True) so .env file always takes precedence over stale exported shell variables
+FEATURE: Add test_pipeline_scenarios.py — comprehensive pipeline test with multiple video scenarios, --id, --whisper, --include-whisper flags
+
 FEATURE: 7-day Pro trial on signup — trial starts at first login, unlimited active channels during trial, auto-downgrade to free after 7 days; "Trial" badge in nav; trial banner with countdown
 FEATURE: SourcesSection search — compact default view (active channels only), search bar filters all saved channels with name highlighting, "X paused" button to expand full list
 FEATURE: New monetization model — free users can import unlimited channels but only 3 can be active (receive summaries); toggle active/inactive per channel; upgrade prompt when trying to activate beyond limit

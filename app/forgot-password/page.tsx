@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { t } from "@/locales";
+
+const tl = t.auth.forgotPassword;
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -66,16 +69,15 @@ export default function ForgotPasswordPage() {
                 />
               </svg>
             </div>
-            <h2 className="text-lg font-semibold">Check your email</h2>
+            <h2 className="text-lg font-semibold">{tl.sentHeading}</h2>
             <p className="text-muted-foreground mt-2 text-sm">
-              We sent a password reset link to <strong>{email}</strong>. Click
-              it to set a new password.
+              {tl.sentSubtitle(email)}
             </p>
             <Link
               href="/login"
               className="text-muted-foreground mt-4 inline-block text-sm underline"
             >
-              Back to login
+              {tl.backFromSent}
             </Link>
           </CardContent>
         </Card>
@@ -104,21 +106,19 @@ export default function ForgotPasswordPage() {
           >
             B
           </Link>
-          <CardTitle>Reset your password</CardTitle>
-          <p className="text-muted-foreground text-sm">
-            Enter your email and we&apos;ll send you a reset link
-          </p>
+          <CardTitle>{tl.heading}</CardTitle>
+          <p className="text-muted-foreground text-sm">{tl.subtitle}</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleReset} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{tl.emailLabel}</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder={tl.emailPlaceholder}
                 required
               />
             </div>
@@ -130,14 +130,14 @@ export default function ForgotPasswordPage() {
               className="w-full bg-red-600 shadow-[0_0_20px_rgba(239,68,68,0.25)] hover:bg-red-500"
               disabled={loading}
             >
-              {loading ? "Sending..." : "Send reset link"}
+              {loading ? tl.submittingLabel : tl.submitLabel}
             </Button>
           </form>
 
           <p className="text-muted-foreground mt-4 text-center text-sm">
-            Remember your password?{" "}
+            {tl.backToLoginText}{" "}
             <Link href="/login" className="text-foreground underline">
-              Log in
+              {tl.backToLoginLink}
             </Link>
           </p>
         </CardContent>

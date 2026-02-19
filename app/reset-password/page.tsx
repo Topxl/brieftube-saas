@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { t } from "@/locales";
+
+const tl = t.auth.resetPassword;
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -33,12 +36,12 @@ export default function ResetPasswordPage() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(tl.errorMismatch);
       return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setError(tl.errorMinLength);
       return;
     }
 
@@ -91,9 +94,9 @@ export default function ResetPasswordPage() {
                 />
               </svg>
             </div>
-            <h2 className="text-lg font-semibold">Password updated</h2>
+            <h2 className="text-lg font-semibold">{tl.successHeading}</h2>
             <p className="text-muted-foreground mt-2 text-sm">
-              Your password has been changed. Redirecting to dashboard...
+              {tl.successSubtitle}
             </p>
           </CardContent>
         </Card>
@@ -122,39 +125,34 @@ export default function ResetPasswordPage() {
           >
             B
           </Link>
-          <CardTitle>Set new password</CardTitle>
-          <p className="text-muted-foreground text-sm">
-            Choose a strong password for your account
-          </p>
+          <CardTitle>{tl.heading}</CardTitle>
+          <p className="text-muted-foreground text-sm">{tl.subtitle}</p>
         </CardHeader>
         <CardContent>
           {!sessionReady && (
-            <p className="mb-4 text-sm text-yellow-500">
-              Loading session... If this takes too long, try clicking the reset
-              link in your email again.
-            </p>
+            <p className="mb-4 text-sm text-yellow-500">{tl.sessionLoading}</p>
           )}
           <form onSubmit={handleReset} className="space-y-4">
             <div>
-              <Label htmlFor="password">New password</Label>
+              <Label htmlFor="password">{tl.newPasswordLabel}</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 8 characters"
+                placeholder={tl.newPasswordPlaceholder}
                 minLength={8}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="confirm">Confirm password</Label>
+              <Label htmlFor="confirm">{tl.confirmPasswordLabel}</Label>
               <Input
                 id="confirm"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repeat your password"
+                placeholder={tl.confirmPasswordPlaceholder}
                 minLength={8}
                 required
               />
@@ -167,7 +165,7 @@ export default function ResetPasswordPage() {
               className="w-full bg-red-600 shadow-[0_0_20px_rgba(239,68,68,0.25)] hover:bg-red-500"
               disabled={loading || !sessionReady}
             >
-              {loading ? "Updating..." : "Update password"}
+              {loading ? tl.submittingLabel : tl.submitLabel}
             </Button>
           </form>
         </CardContent>

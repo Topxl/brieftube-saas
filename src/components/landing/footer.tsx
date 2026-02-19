@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import { t } from "@/locales";
+
+const tl = t.landing.footer;
 
 export async function Footer() {
-  // Force dynamic rendering
   await headers();
 
   return (
@@ -20,13 +22,13 @@ export async function Footer() {
             href="/privacy"
             className="hover:text-foreground transition-colors"
           >
-            Privacy
+            {tl.privacy}
           </Link>
           <Link
             href="/terms"
             className="hover:text-foreground transition-colors"
           >
-            Terms
+            {tl.terms}
           </Link>
           <a
             href="https://github.com/Topxl/BriefTube"
@@ -34,7 +36,7 @@ export async function Footer() {
             rel="noopener noreferrer"
             className="hover:text-foreground transition-colors"
           >
-            GitHub
+            {tl.github}
           </a>
           <a
             href="https://github.com/Topxl/BriefTube/blob/main/CONTRIBUTING.md"
@@ -42,11 +44,11 @@ export async function Footer() {
             rel="noopener noreferrer"
             className="hover:text-foreground transition-colors"
           >
-            Contribute
+            {tl.contribute}
           </a>
         </div>
 
-        <p>&copy; {new Date().getFullYear()} BriefTube. All rights reserved.</p>
+        <p>{tl.copyright(new Date().getFullYear())}</p>
       </div>
     </footer>
   );

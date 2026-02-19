@@ -4,10 +4,13 @@ import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { SummaryRow } from "@/components/dashboard/summary-row";
+import { t } from "@/locales";
 import type {
   EnrichedDelivery,
   ProcessedVideo,
 } from "@/components/dashboard/summary-row";
+
+const tl = t.dashboard.summaries;
 
 const PAGE_SIZE = 20;
 
@@ -108,7 +111,7 @@ export function SummariesFeed() {
     <div className="space-y-2.5">
       <div className="flex items-center justify-between">
         <h2 className="text-muted-foreground text-sm font-semibold">
-          Recent summaries
+          {tl.heading}
         </h2>
       </div>
 
@@ -124,7 +127,7 @@ export function SummariesFeed() {
 
       {loading && (
         <p className="text-muted-foreground py-3 text-center text-xs">
-          Loading...
+          {tl.loading}
         </p>
       )}
 
@@ -135,7 +138,7 @@ export function SummariesFeed() {
             size="sm"
             onClick={async () => loadDeliveries(page + 1)}
           >
-            Load more
+            {tl.loadMore}
           </Button>
         </div>
       )}

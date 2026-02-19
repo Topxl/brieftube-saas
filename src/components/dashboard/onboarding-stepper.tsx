@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { t } from "@/locales";
+
+const tl = t.dashboard.stepper;
 
 type OnboardingStepperProps = {
   telegramConnected: boolean;
@@ -12,21 +15,21 @@ type OnboardingStepperProps = {
 
 const steps = [
   {
-    title: "Connect Telegram",
-    description: "Receive audio summaries",
-    cta: "Connect",
+    title: tl.step1Title,
+    description: tl.step1Desc,
+    cta: tl.step1Cta,
     href: "/dashboard/settings",
   },
   {
-    title: "Add a channel",
-    description: "Subscribe to YouTube channels",
-    cta: "Add channel",
+    title: tl.step2Title,
+    description: tl.step2Desc,
+    cta: tl.step2Cta,
     href: "/dashboard/channels",
   },
   {
-    title: "First summary",
-    description: "Arrives when a new video drops",
-    cta: "View summaries",
+    title: tl.step3Title,
+    description: tl.step3Desc,
+    cta: tl.step3Cta,
     href: "/dashboard#summaries",
   },
 ];
@@ -46,7 +49,7 @@ export function OnboardingStepper({
     <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-muted-foreground text-xs font-medium">
-          Setup {completedCount}/3
+          {tl.progressLabel(completedCount)}
         </p>
         <div className="h-1 w-20 rounded-full bg-white/[0.06] sm:w-24">
           <div

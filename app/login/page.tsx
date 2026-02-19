@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GoogleLoginButton } from "./_components/google-login-button";
+import { t } from "@/locales";
+
+const tl = t.auth.login;
 
 export default function LoginPage() {
   return (
@@ -27,16 +30,14 @@ export default function LoginPage() {
           >
             B
           </Link>
-          <CardTitle>Welcome to BriefTube</CardTitle>
-          <p className="text-muted-foreground text-sm">
-            Get YouTube summaries delivered to your Telegram
-          </p>
+          <CardTitle>{tl.heading}</CardTitle>
+          <p className="text-muted-foreground text-sm">{tl.subtitle}</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <GoogleLoginButton />
 
           <p className="text-muted-foreground text-center text-xs">
-            By signing in, you agree to our Terms of Service and Privacy Policy
+            {tl.terms}
           </p>
         </CardContent>
       </Card>

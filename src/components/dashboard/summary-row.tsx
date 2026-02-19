@@ -4,6 +4,9 @@ import { useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { formatDate } from "@/lib/format";
 import { ChevronDown, ExternalLink, Play, Pause } from "lucide-react";
+import { t } from "@/locales";
+
+const tl = t.dashboard.summaries;
 
 export type Delivery = {
   id: string;
@@ -133,7 +136,7 @@ export function SummaryRow({
           className="min-w-0 flex-1 text-left"
         >
           <p className="line-clamp-2 text-sm leading-snug font-medium">
-            {title ?? "Untitled video"}
+            {title ?? tl.untitledVideo}
           </p>
           <div className="mt-1 flex items-center gap-2">
             <span className="text-muted-foreground text-[11px]">
@@ -147,12 +150,14 @@ export function SummaryRow({
                     : "bg-yellow-500/20 text-yellow-400"
                 }`}
               >
-                {video.status === "failed" ? "failed" : "processing"}
+                {video.status === "failed"
+                  ? tl.statusFailed
+                  : tl.statusProcessing}
               </span>
             )}
             {!video && (
               <span className="rounded-full bg-yellow-500/20 px-1.5 py-px text-[9px] font-medium text-yellow-400">
-                processing
+                {tl.statusProcessing}
               </span>
             )}
             {video?.summary && (

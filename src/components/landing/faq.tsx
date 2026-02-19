@@ -2,34 +2,9 @@
 
 import { useState } from "react";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { t } from "@/locales";
 
-const faqs = [
-  {
-    question: "How does it work?",
-    answer:
-      "BriefTube monitors YouTube RSS feeds for new videos from your subscribed channels. When a new video is detected, our AI generates a detailed summary, converts it to natural-sounding audio, and sends it directly to your Telegram.",
-  },
-  {
-    question: "Is it really only 1\u20AC/month?",
-    answer:
-      "Yes! We keep costs extremely low by using efficient AI processing and lightweight infrastructure. No hidden fees, no surprise charges.",
-  },
-  {
-    question: "What languages are supported?",
-    answer:
-      "We currently support French and English voices, with more languages coming soon. Pro users can choose their preferred voice from our selection.",
-  },
-  {
-    question: "Do I need to create a Telegram bot?",
-    answer:
-      "No. You simply connect your Telegram account by clicking a link and sending a message to our @brief_tube_bot. It takes 10 seconds.",
-  },
-  {
-    question: "What if I want to cancel?",
-    answer:
-      "Cancel anytime from your dashboard. No questions asked, no cancellation fees. Your free tier access remains active.",
-  },
-];
+const tl = t.landing.faq;
 
 export function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
@@ -39,13 +14,13 @@ export function FAQ() {
       <div className="mx-auto max-w-2xl px-6">
         <ScrollReveal>
           <h2 className="font-display text-center text-2xl font-bold md:text-3xl">
-            Frequently asked questions
+            {tl.heading}
           </h2>
         </ScrollReveal>
 
         <ScrollReveal delay={150}>
           <div className="mt-12 space-y-2">
-            {faqs.map((faq, i) => (
+            {tl.items.map((faq, i) => (
               <div
                 key={i}
                 className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/[0.05]"
@@ -73,9 +48,7 @@ export function FAQ() {
                 </button>
                 <div
                   className="grid transition-all duration-300 ease-out"
-                  style={{
-                    gridTemplateRows: open === i ? "1fr" : "0fr",
-                  }}
+                  style={{ gridTemplateRows: open === i ? "1fr" : "0fr" }}
                 >
                   <div className="overflow-hidden">
                     <div className="text-muted-foreground px-5 pb-4 text-sm">
