@@ -1,6 +1,7 @@
 export const SiteConfig = {
   title: "BriefTube",
   freeChannelsLimit: 5,
+  trialDays: 7,
   description:
     "YouTube videos, summarized as audio, delivered to your Telegram",
   prodUrl: "https://brieftube.app",

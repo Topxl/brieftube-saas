@@ -5,6 +5,7 @@
 FIX: Trial users can now upgrade to paid Pro — show upgrade button when isTrial even though isPro is true
 FIX: Checkout preserves remaining trial days — passes trial_end to Stripe so user doesn't lose free days
 FIX: DB — handle_new_user trigger changed from 14 days to 7 days trial
+REFACTOR: Trial duration moved from DB trigger to SiteConfig.trialDays — change once in site-config.ts, applies everywhere
 
 
 REFACTOR: Log bot — remplace l'interface commandes/logs bruts par un dashboard interactif à boutons Telegram : menu principal avec statut worker (🟢/🟡/🔴), stats temps réel Supabase, erreurs reformatées, activité récente, système, et alertes live push (erreurs + succès toutes les 20s via bouton toggle)
