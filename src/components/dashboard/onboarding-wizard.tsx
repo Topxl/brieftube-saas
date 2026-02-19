@@ -16,7 +16,6 @@ import {
   Headphones,
   Send,
 } from "lucide-react";
-import Link from "next/link";
 import type { Tables } from "@/types/supabase";
 
 type Subscription = Tables<"subscriptions">;
@@ -244,17 +243,6 @@ export function OnboardingWizard({ initialVoice }: Props) {
             >
               {showManualAdd ? "Hide manual add" : "Or add a channel manually"}
             </button>
-
-            {/* TERTIARY: Browse curated lists */}
-            <Link
-              href="/lists"
-              className="text-muted-foreground block w-full rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-center text-sm transition-colors hover:bg-white/[0.04]"
-            >
-              <span className="font-medium">Browse channel lists</span>
-              <span className="mt-0.5 block text-xs">
-                Discover curated collections by the community
-              </span>
-            </Link>
 
             {showManualAdd && (
               <form
