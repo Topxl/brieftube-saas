@@ -1,5 +1,6 @@
 """Telegram bot command handlers for @brief_tube_bot."""
 
+import html as _html
 import re
 import logging
 import aiohttp
@@ -16,7 +17,7 @@ from telegram.ext import (
 
 from config import TELEGRAM_BOT_TOKEN, ADMIN_TELEGRAM_CHAT_ID, APP_URL
 import db
-from monitoring import stats, get_system_info, get_log_tail
+from monitoring import stats, get_system_info, get_log_tail, format_log
 
 logger = logging.getLogger(__name__)
 
@@ -140,35 +141,30 @@ async def monitor_status_command(update: Update, context: ContextTypes.DEFAULT_T
     summary = stats.get_summary()
     system = get_system_info()
 
-    status_msg = f"""🔍 **Worker Status**
+    last_video = summary['last_video_time'][:16] if summary['last_video_time'] else 'N/A'
+    status_msg = (
+        f"<b>Worker Status</b>\n\n"
+        f"Uptime: {summary['uptime']}  |  Started: {summary['start_time'][:16]}\n\n"
+        f"<b>Videos</b>\n"
+        f"• Processed: {summary['videos_processed']}\n"
+        f"• Failed: {summary['videos_failed']}\n"
+        f"• Success rate: {_calc_success_rate(summary)}%\n\n"
+        f"<b>RSS Scanner</b>\n"
+        f"• Scans: {summary['rss_scans']}\n"
+        f"• New videos found: {summary['new_videos_found']}\n\n"
+        f"<b>Deliveries</b>\n"
+        f"• Sent: {summary['deliveries_sent']}\n"
+        f"• Failed: {summary['deliveries_failed']}\n\n"
+        f"<b>Performance</b>\n"
+        f"• Avg processing: {summary['avg_processing_time']}s\n"
+        f"• Last video: {last_video}\n\n"
+        f"<b>System</b>\n"
+        f"• CPU: {system.get('cpu_percent', 'N/A')}%\n"
+        f"• Memory: {system.get('memory_percent', 'N/A')}% ({system.get('memory_used_mb', 'N/A')} MB)\n"
+        f"• Disk: {system.get('disk_free_gb', 'N/A')} GB free"
+    )
 
-⏱️ **Uptime:** {summary['uptime']}
-📅 **Started:** {summary['start_time'][:16]}
-
-📊 **Statistics:**
-• Videos processed: {summary['videos_processed']}
-• Videos failed: {summary['videos_failed']}
-• Success rate: {_calc_success_rate(summary)}%
-
-📡 **RSS Scanner:**
-• Scans completed: {summary['rss_scans']}
-• New videos found: {summary['new_videos_found']}
-
-📤 **Deliveries:**
-• Sent: {summary['deliveries_sent']}
-• Failed: {summary['deliveries_failed']}
-
-⚡ **Performance:**
-• Avg processing: {summary['avg_processing_time']}s
-• Last video: {summary['last_video_time'][:16] if summary['last_video_time'] else 'N/A'}
-
-💻 **System:**
-• CPU: {system.get('cpu_percent', 'N/A')}%
-• Memory: {system.get('memory_percent', 'N/A')}% ({system.get('memory_used_mb', 'N/A')} MB)
-• Disk: {system.get('disk_free_gb', 'N/A')} GB free
-"""
-
-    await update.message.reply_text(status_msg, parse_mode="Markdown")
+    await update.message.reply_text(status_msg, parse_mode="HTML")
 
 
 async def monitor_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -187,30 +183,27 @@ async def monitor_stats_command(update: Update, context: ContextTypes.DEFAULT_TY
         for error_type, count in summary['errors_by_type'].items()
     ) or "None"
 
-    stats_msg = f"""📈 **Detailed Statistics**
+    stats_msg = (
+        f"<b>Detailed Statistics</b>\n\n"
+        f"<b>Processing</b>\n"
+        f"• Processed: {summary['videos_processed']}\n"
+        f"• Failed: {summary['videos_failed']}\n"
+        f"• Success rate: {_calc_success_rate(summary)}%\n"
+        f"• Avg time: {summary['avg_processing_time']}s\n\n"
+        f"<b>Error Breakdown</b>\n"
+        f"{error_breakdown}\n\n"
+        f"<b>Recent Errors</b>\n"
+    )
 
-**Processing Stats:**
-• Total processed: {summary['videos_processed']}
-• Total failed: {summary['videos_failed']}
-• Success rate: {_calc_success_rate(summary)}%
-• Avg time: {summary['avg_processing_time']}s
-
-**Error Breakdown:**
-{error_breakdown}
-
-**Recent Errors:**
-"""
-
-    # Add recent errors
     if summary['recent_errors']:
         for err in summary['recent_errors'][-5:]:
-            time_str = err['time'][11:16]  # HH:MM
-            msg = err['message'][:80]  # Truncate long messages
-            stats_msg += f"\n`{time_str}` {msg}"
+            time_str = err['time'][11:16]
+            msg = _html.escape(err['message'][:80])
+            stats_msg += f"<code>{time_str}</code> {msg}\n"
     else:
-        stats_msg += "\nNo recent errors ✅"
+        stats_msg += "No recent errors"
 
-    await update.message.reply_text(stats_msg, parse_mode="Markdown")
+    await update.message.reply_text(stats_msg, parse_mode="HTML")
 
 
 async def monitor_logs_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -226,13 +219,11 @@ async def monitor_logs_command(update: Update, context: ContextTypes.DEFAULT_TYP
     if context.args and context.args[0].isdigit():
         lines = min(int(context.args[0]), 100)
 
-    logs = get_log_tail(lines)
-
-    # Telegram message limit is 4096 chars
-    if len(logs) > 3900:
-        logs = logs[-3900:]
-
-    await update.message.reply_text(f"```\n{logs}\n```", parse_mode="Markdown")
+    formatted = format_log(get_log_tail(lines))
+    await update.message.reply_text(
+        f"<b>Last {lines} lines</b>\n\n{formatted}",
+        parse_mode="HTML",
+    )
 
 
 def _calc_success_rate(summary: dict) -> int:

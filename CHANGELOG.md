@@ -2,6 +2,8 @@
 
 ## 2026-02-19
 
+REFACTOR: Improve Telegram log bot readability — parse raw log lines into compact `HH:MM LEVEL  message` format with HTML bold/italic for errors/warnings; fix monitoring alerts that used Markdown v1 (`**bold**` was never rendering); switch all three files (log_bot.py, monitoring.py, bot_handler.py) to parse_mode=HTML
+
 FIX: Remove email/password signup — /signup now redirects to /login; all "Start Free" buttons point to /login (Google OAuth only)
 
 

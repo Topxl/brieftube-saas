@@ -29,6 +29,8 @@ from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
+from monitoring import format_log, _MAX_TG_CHARS
+
 load_dotenv()
 
 # ── Config ─────────────────────────────────────────────────────────
@@ -39,7 +41,6 @@ LOG_BOT_ADMIN_CHAT_ID = os.getenv("LOG_BOT_ADMIN_CHAT_ID", "")
 
 DEFAULT_LINES = 50
 MAX_LINES = 200
-MAX_TG_CHARS = 3900  # Telegram limit is 4096, keep some margin
 
 # ── Logging ────────────────────────────────────────────────────────
 
@@ -64,7 +65,7 @@ def _is_admin(chat_id: str) -> bool:
 
 
 def _tail(n: int) -> str:
-    """Return the last N lines of worker.log."""
+    """Return the last N lines of worker.log as raw text."""
     try:
         with open(LOG_FILE, "r", encoding="utf-8", errors="replace") as f:
             lines = deque(f, maxlen=n)
@@ -79,7 +80,7 @@ def _tail_errors(n: int) -> str:
     """Return the last N lines containing ERROR or WARNING."""
     try:
         with open(LOG_FILE, "r", encoding="utf-8", errors="replace") as f:
-            error_lines = [l for l in f if " ERROR " in l or " WARNING " in l]
+            error_lines = [line for line in f if " ERROR " in line or " WARNING " in line]
         tail = error_lines[-n:] if len(error_lines) > n else error_lines
         return "".join(tail) or "No errors or warnings found."
     except FileNotFoundError:
@@ -110,23 +111,18 @@ def _read_new_lines(offset: int) -> tuple[str, int]:
         return f"Error: {e}", offset
 
 
-def _truncate(text: str) -> str:
-    """Keep only the tail if the text exceeds Telegram's limit."""
-    if len(text) <= MAX_TG_CHARS:
-        return text
-    return "...(truncated)\n" + text[-MAX_TG_CHARS:]
-
-
 def _get_system_info() -> str:
-    """Return a short system resource summary."""
+    """Return a compact system resource summary."""
     try:
         cpu = psutil.cpu_percent(interval=0.2)
         mem = psutil.virtual_memory()
         disk = psutil.disk_usage("/")
+        used_gb = mem.used / 1024 / 1024 / 1024
+        total_gb = mem.total / 1024 / 1024 / 1024
         return (
-            f"CPU: {cpu}%\n"
-            f"RAM: {mem.percent}%  ({mem.used // 1024 // 1024} MB / {mem.total // 1024 // 1024} MB)\n"
-            f"Disk: {disk.free // 1024 // 1024 // 1024} GB free  ({disk.percent}% used)"
+            f"CPU    {cpu}%\n"
+            f"RAM    {mem.percent}% · {used_gb:.1f} / {total_gb:.0f} GB\n"
+            f"Disk   {disk.free // 1024 // 1024 // 1024} GB free · {disk.percent}% used"
         )
     except Exception as e:
         return f"System info unavailable: {e}"
@@ -138,19 +134,20 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     chat_id = str(update.effective_chat.id)
     if not _is_admin(chat_id):
         await update.message.reply_text(
-            f"Access denied.\n\nYour chat ID: {chat_id}\n"
-            "Set LOG_BOT_ADMIN_CHAT_ID in worker/.env to allow access."
+            f"Access denied.\n\nYour chat ID: <code>{chat_id}</code>\n"
+            "Set LOG_BOT_ADMIN_CHAT_ID in worker/.env to allow access.",
+            parse_mode="HTML",
         )
         return
 
     await update.message.reply_text(
-        "BriefTube Log Bot\n\n"
-        "Commands:\n"
-        "/logs [n]    — Last N lines (default 50)\n"
-        "/errors [n]  — Last N ERROR/WARNING lines (default 20)\n"
-        "/status      — System info\n"
-        "/watch [s]   — Stream new lines every S seconds (default 30)\n"
-        "/stop        — Stop streaming"
+        "<b>BriefTube Log Bot</b>\n\n"
+        "<code>/logs [n]   </code> Last N lines (default 50)\n"
+        "<code>/errors [n] </code> Last N errors/warnings (default 20)\n"
+        "<code>/status     </code> System info\n"
+        "<code>/watch [s]  </code> Stream new lines every S seconds\n"
+        "<code>/stop       </code> Stop streaming",
+        parse_mode="HTML",
     )
 
 
@@ -164,10 +161,10 @@ async def logs_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     if context.args and context.args[0].isdigit():
         n = min(int(context.args[0]), MAX_LINES)
 
-    text = _tail(n)
+    formatted = format_log(_tail(n))
     await update.message.reply_text(
-        f"```\n{_truncate(text)}\n```",
-        parse_mode="Markdown",
+        f"<b>Last {n} lines</b>\n\n{formatted}",
+        parse_mode="HTML",
     )
 
 
@@ -181,10 +178,10 @@ async def errors_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if context.args and context.args[0].isdigit():
         n = min(int(context.args[0]), 100)
 
-    text = _tail_errors(n)
+    formatted = format_log(_tail_errors(n))
     await update.message.reply_text(
-        f"```\n{_truncate(text)}\n```",
-        parse_mode="Markdown",
+        f"<b>Last {n} errors / warnings</b>\n\n{formatted}",
+        parse_mode="HTML",
     )
 
 
@@ -194,15 +191,21 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await update.message.reply_text("Access denied.")
         return
 
-    size_kb = _get_file_size() // 1024
-    watching = chat_id in _watchers
-
-    text = (
-        f"System\n{_get_system_info()}\n\n"
-        f"Log file: {size_kb} KB\n"
-        f"Streaming: {'active' if watching else 'off'}"
+    size_bytes = _get_file_size()
+    size_str = (
+        f"{size_bytes / 1024 / 1024:.1f} MB"
+        if size_bytes >= 1024 * 1024
+        else f"{size_bytes // 1024} KB"
     )
-    await update.message.reply_text(text)
+    watch_str = "active" if chat_id in _watchers else "off"
+
+    await update.message.reply_text(
+        f"<b>System Status</b>\n\n"
+        f"<code>{_get_system_info()}</code>\n\n"
+        f"Log    {size_str}\n"
+        f"Watch  {watch_str}",
+        parse_mode="HTML",
+    )
 
 
 async def watch_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -212,9 +215,7 @@ async def watch_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         return
 
     if chat_id in _watch_tasks and not _watch_tasks[chat_id].done():
-        await update.message.reply_text(
-            "Already streaming. Use /stop to stop first."
-        )
+        await update.message.reply_text("Already streaming. Use /stop to stop first.")
         return
 
     interval = 30
@@ -224,7 +225,8 @@ async def watch_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     # Start from the current end of file — only new lines will be sent.
     _watchers[chat_id] = _get_file_size()
     await update.message.reply_text(
-        f"Streaming worker.log every {interval}s.\nUse /stop to stop."
+        f"Streaming <code>worker.log</code> every {interval}s.\nUse /stop to stop.",
+        parse_mode="HTML",
     )
 
     async def _watch_loop() -> None:
@@ -235,14 +237,16 @@ async def watch_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             new_text, new_offset = _read_new_lines(_watchers[chat_id])
             _watchers[chat_id] = new_offset
             if new_text.strip():
-                try:
-                    await context.bot.send_message(
-                        chat_id=chat_id,
-                        text=f"```\n{_truncate(new_text)}\n```",
-                        parse_mode="Markdown",
-                    )
-                except Exception as e:
-                    logger.error(f"Watch send error: {e}")
+                formatted = format_log(new_text)
+                if formatted:
+                    try:
+                        await context.bot.send_message(
+                            chat_id=chat_id,
+                            text=formatted,
+                            parse_mode="HTML",
+                        )
+                    except Exception as e:
+                        logger.error(f"Watch send error: {e}")
 
     task = asyncio.create_task(_watch_loop())
     _watch_tasks[chat_id] = task

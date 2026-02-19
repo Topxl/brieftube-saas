@@ -5,13 +5,83 @@ Tracks worker statistics and sends alerts to admin via Telegram.
 """
 
 import asyncio
+import html as _html
 import logging
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 import psutil
 
 logger = logging.getLogger(__name__)
+
+# ── Log formatting helpers (shared with log_bot.py and bot_handler.py) ────────
+
+_MAX_TG_CHARS = 3900  # Telegram limit is 4096; keep some margin
+
+# Matches: "2026-02-19 14:23:45,123 [logger.name] LEVEL message"
+_LOG_RE = re.compile(
+    r"\d{4}-\d{2}-\d{2} (\d{2}:\d{2}):\d{2},\d+ \[[^\]]+\] (\w+) (.*)"
+)
+_LEVEL_TAG = {
+    "DEBUG": "DBG ",
+    "INFO": "INFO",
+    "WARNING": "WARN",
+    "ERROR": "ERR!",
+    "CRITICAL": "CRIT",
+}
+
+
+def format_log_line(line: str) -> str:
+    """Format one raw log line as Telegram HTML.
+
+    Input:  "2026-02-19 14:23:45,123 [worker] INFO [abc] Processing: title"
+    Output: "14:23 INFO  [abc] Processing: title"
+    Errors are <b>bold</b>, warnings <i>italic</i>.
+    """
+    line = line.rstrip()
+    if not line.strip():
+        return ""
+    m = _LOG_RE.match(line)
+    if not m:
+        return _html.escape(line)
+    time, level, message = m.groups()
+    tag = _LEVEL_TAG.get(level, level[:4])
+    safe = _html.escape(message)
+    text = f"{time} {tag}  {safe}"
+    if level in ("ERROR", "CRITICAL"):
+        return f"<b>{text}</b>"
+    if level == "WARNING":
+        return f"<i>{text}</i>"
+    return text
+
+
+def format_log(raw: str) -> str:
+    """Format a block of raw log text as HTML, truncated to Telegram limit."""
+    lines = [format_log_line(line) for line in raw.splitlines()]
+    lines = [line for line in lines if line]
+    # Drop oldest lines until the text fits
+    while lines and sum(len(line) + 1 for line in lines) > _MAX_TG_CHARS:
+        lines.pop(0)
+    return "\n".join(lines) or "(log empty)"
+
+
+def _md_to_html(text: str) -> str:
+    """Convert **bold** Markdown to HTML <b> tags and escape HTML special chars.
+
+    Splits on '**', alternates plain/bold segments, HTML-escapes each part.
+    Handles titles like "**Video processed**\\n\\nfoo" correctly.
+    """
+    parts = text.split("**")
+    result = []
+    for i, part in enumerate(parts):
+        escaped = _html.escape(part)
+        if i % 2 == 1:  # odd index = bold content
+            result.append(f"<b>{escaped}</b>")
+        else:
+            result.append(escaped)
+    return "".join(result)
+
 
 # ── Statistics Storage ────────────────────────────────────────────
 
@@ -136,16 +206,17 @@ class MonitoringAlert:
         if not self.admin_chat_id:
             return
 
-        # Add emoji based on level
         emoji = {
             "INFO": "ℹ️",
             "SUCCESS": "✅",
             "WARNING": "⚠️",
             "ERROR": "🔴",
-            "CRITICAL": "🚨"
+            "CRITICAL": "🚨",
         }.get(level, "📢")
 
-        formatted = f"{emoji} **{level}**\n\n{message}"
+        # Convert **bold** Markdown in message to HTML and escape special chars
+        safe_msg = _md_to_html(message)
+        formatted = f"{emoji} <b>{level}</b>\n\n{safe_msg}"
         await self.alert_queue.put(formatted)
 
     async def process_alerts(self):
@@ -166,7 +237,7 @@ class MonitoringAlert:
                     await self.bot_app.bot.send_message(
                         chat_id=self.admin_chat_id,
                         text=message,
-                        parse_mode="Markdown"
+                        parse_mode="HTML",
                     )
                 except Exception as e:
                     logger.error(f"Failed to send alert: {e}")
@@ -224,28 +295,23 @@ async def send_daily_report(alert_system: MonitoringAlert):
     summary = stats.get_summary()
     system = get_system_info()
 
-    report = f"""📊 **Daily Worker Report**
-
-**Uptime:** {summary['uptime']}
-
-**Videos:**
-• Processed: {summary['videos_processed']}
-• Failed: {summary['videos_failed']}
-• Avg time: {summary['avg_processing_time']}s
-
-**RSS Scans:** {summary['rss_scans']}
-**New videos found:** {summary['new_videos_found']}
-
-**Deliveries:**
-• Sent: {summary['deliveries_sent']}
-• Failed: {summary['deliveries_failed']}
-
-**System:**
-• CPU: {system.get('cpu_percent', 'N/A')}%
-• Memory: {system.get('memory_percent', 'N/A')}%
-• Disk: {system.get('disk_free_gb', 'N/A')} GB free
-
-**Recent Errors:** {len(summary['recent_errors'])}
-"""
+    report = (
+        f"📊 <b>Daily Worker Report</b>\n\n"
+        f"<b>Uptime:</b> {summary['uptime']}\n\n"
+        f"<b>Videos:</b>\n"
+        f"• Processed: {summary['videos_processed']}\n"
+        f"• Failed: {summary['videos_failed']}\n"
+        f"• Avg time: {summary['avg_processing_time']}s\n\n"
+        f"<b>RSS Scans:</b> {summary['rss_scans']}\n"
+        f"<b>New videos found:</b> {summary['new_videos_found']}\n\n"
+        f"<b>Deliveries:</b>\n"
+        f"• Sent: {summary['deliveries_sent']}\n"
+        f"• Failed: {summary['deliveries_failed']}\n\n"
+        f"<b>System:</b>\n"
+        f"• CPU: {system.get('cpu_percent', 'N/A')}%\n"
+        f"• Memory: {system.get('memory_percent', 'N/A')}%\n"
+        f"• Disk: {system.get('disk_free_gb', 'N/A')} GB free\n\n"
+        f"<b>Recent Errors:</b> {len(summary['recent_errors'])}\n"
+    )
 
     await alert_system.send_alert(report, level="INFO")
