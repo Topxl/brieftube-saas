@@ -16,7 +16,7 @@ export async function GET() {
   const price = await stripe.prices.retrieve(priceId);
 
   return NextResponse.json({
-    amount: (price.unit_amount ?? 0) / 100,
+    amount: price.unit_amount ?? 0,
     currency: price.currency,
     interval: price.recurring?.interval ?? "month",
   });
