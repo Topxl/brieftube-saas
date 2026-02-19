@@ -19,15 +19,19 @@ const navItems = [
 ];
 
 function PlanBadge({ plan }: { plan: string }) {
+  const isPro = plan === "active";
+  const isTrial = plan === "trial";
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase ${
-        plan === "active"
+        isPro
           ? "bg-gradient-to-r from-red-600 to-orange-500 text-white shadow-[0_0_10px_rgba(239,68,68,0.2)]"
-          : "text-muted-foreground border border-white/[0.08] bg-white/[0.06]"
+          : isTrial
+            ? "border border-amber-500/30 bg-amber-500/10 text-amber-400"
+            : "text-muted-foreground border border-white/[0.08] bg-white/[0.06]"
       }`}
     >
-      {plan === "active" ? "Pro" : "Free"}
+      {isPro ? "Pro" : isTrial ? "Trial" : "Free"}
     </span>
   );
 }

@@ -33,7 +33,10 @@ export default async function DashboardPage() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  const isPro = profile.subscription_status === "active";
+  const isPro =
+    profile.subscription_status === "active" ||
+    (profile.trial_ends_at != null &&
+      new Date(profile.trial_ends_at) > new Date());
   const maxChannels = profile.max_channels ?? 3;
   const telegramConnected = profile.telegram_connected ?? false;
   const ttsVoice = profile.tts_voice ?? "fr-FR-DeniseNeural";

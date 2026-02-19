@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
   // Check user's profile for max active channels limit
   const { data: profile } = await supabase
     .from("profiles")
-    .select("max_channels, subscription_status")
+    .select("max_channels, subscription_status, trial_ends_at")
     .eq("id", user.id)
     .single();
 
@@ -135,7 +135,10 @@ export async function POST(request: NextRequest) {
     .eq("active", true);
 
   const maxActiveChannels = profile?.max_channels ?? 3;
-  const isPro = profile?.subscription_status === "active";
+  const isPro =
+    profile?.subscription_status === "active" ||
+    (profile?.trial_ends_at != null &&
+      new Date(profile.trial_ends_at) > new Date());
 
   // Free users can always add channels, but active is limited to maxActiveChannels
   const shouldBeActive = isPro || (activeCount ?? 0) < maxActiveChannels;
@@ -330,11 +333,14 @@ export async function PATCH(request: NextRequest) {
   if (active) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("max_channels, subscription_status")
+      .select("max_channels, subscription_status, trial_ends_at")
       .eq("id", user.id)
       .single();
 
-    const isPro = profile?.subscription_status === "active";
+    const isPro =
+      profile?.subscription_status === "active" ||
+      (profile?.trial_ends_at != null &&
+        new Date(profile.trial_ends_at) > new Date());
     const maxActiveChannels = profile?.max_channels ?? 3;
 
     if (!isPro) {

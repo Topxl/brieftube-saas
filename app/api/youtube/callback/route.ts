@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
   const [profileRes, existingSubsRes, youtubeChannels] = await Promise.all([
     supabase
       .from("profiles")
-      .select("max_channels, subscription_status")
+      .select("max_channels, subscription_status, trial_ends_at")
       .eq("id", user.id)
       .single(),
     supabase
@@ -151,7 +151,10 @@ export async function GET(request: NextRequest) {
   ]);
 
   const profile = profileRes.data;
-  const isPro = profile?.subscription_status === "active";
+  const isPro =
+    profile?.subscription_status === "active" ||
+    (profile?.trial_ends_at != null &&
+      new Date(profile.trial_ends_at) > new Date());
   const maxActiveChannels = profile?.max_channels ?? 3;
   const existingActiveCount = (existingSubsRes.data ?? []).filter(
     (s) => s.active,

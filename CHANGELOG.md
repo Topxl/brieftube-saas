@@ -2,6 +2,7 @@
 
 ## 2026-02-19
 
+FEATURE: 7-day Pro trial on signup — trial starts at first login, unlimited active channels during trial, auto-downgrade to free after 7 days; "Trial" badge in nav; trial banner with countdown
 FEATURE: SourcesSection search — compact default view (active channels only), search bar filters all saved channels with name highlighting, "X paused" button to expand full list
 FEATURE: New monetization model — free users can import unlimited channels but only 3 can be active (receive summaries); toggle active/inactive per channel; upgrade prompt when trying to activate beyond limit
 FIX: YouTube import during onboarding — callback now redirects to /onboarding instead of /dashboard/channels (which caused an infinite redirect loop); wizard detects youtube_imported param, fetches sources, and advances to step 2 automatically
