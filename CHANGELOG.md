@@ -2,6 +2,12 @@
 
 ## 2026-02-19
 
+FIX: YouTube bulk import — pre-mark all existing videos as "skipped" before inserting subscriptions so the RSS scanner never processes historical videos; only manually added channels trigger the latest-video delivery
+
+FEATURE: Lists edit & delete — page /lists/[id]/edit avec modification nom/description/catégorie/chaînes, suppression de liste avec confirmation, et bouton "Import my subscriptions" sur la page de création pour pré-remplir depuis ses abonnements
+
+FEATURE: Channel Lists — community-driven discovery feature with curated lists of YouTube channels; public discovery at /lists, list detail page, create page, star/follow actions, ghost subscription architecture (Pro/trial only), ListsSection in dashboard, and "Browse channel lists" link in onboarding wizard
+
 FIX: Landing — replace all hardcoded "5 channels" with SiteConfig.freeChannelsLimit; FAQ price question now fetches real Stripe price instead of hardcoded "$9/month"
 
 

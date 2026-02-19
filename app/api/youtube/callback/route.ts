@@ -184,6 +184,67 @@ export async function GET(request: NextRequest) {
 
   const skipped = youtubeChannels.length - toImport.length;
 
+  // Pre-mark all existing videos for every channel as "skipped" BEFORE inserting
+  // subscriptions. This prevents the RSS scanner (which runs every 5 min) from
+  // treating all historical videos as "new" and queuing them all for processing.
+  // ignoreDuplicates: true ensures we never downgrade a video that was already
+  // completed/pending for another subscriber.
+  if (toImport.length > 0) {
+    logger.info(
+      `Pre-marking existing videos for ${toImport.length} channels...`,
+    );
+
+    const rssResults = await Promise.allSettled(
+      toImport.map(async (ch) => {
+        try {
+          const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${ch.channel_id}`;
+          const rssRes = await fetch(rssUrl, {
+            signal: AbortSignal.timeout(5000),
+          });
+          if (!rssRes.ok) return [];
+          const rssText = await rssRes.text();
+          const entries = [
+            ...rssText.matchAll(/<entry>([\s\S]*?)<\/entry>/g),
+          ].map((m) => m[1]);
+          return entries
+            .map((entry) => ({
+              video_id:
+                entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/)?.[1] ?? null,
+              channel_id: ch.channel_id,
+            }))
+            .filter(
+              (v): v is { video_id: string; channel_id: string } =>
+                !!v.video_id,
+            );
+        } catch {
+          return [];
+        }
+      }),
+    );
+
+    const allVideos = rssResults.flatMap((r) =>
+      r.status === "fulfilled" ? r.value : [],
+    );
+
+    if (allVideos.length > 0) {
+      // Single upsert — RSS feeds contain at most ~15 videos each so the total
+      // is well within Supabase's row limit even for 100+ channels.
+      await supabase.from("processed_videos").upsert(
+        allVideos.map((v) => ({
+          video_id: v.video_id,
+          channel_id: v.channel_id,
+          video_title: "[pre-subscription-import]",
+          video_url: `https://www.youtube.com/watch?v=${v.video_id}`,
+          status: "skipped",
+        })),
+        { onConflict: "video_id", ignoreDuplicates: true },
+      );
+      logger.info(
+        `Pre-marked ${allVideos.length} videos as skipped across ${toImport.length} channels`,
+      );
+    }
+  }
+
   const { data: inserted, error: insertError } = await supabase
     .from("subscriptions")
     .insert(toImport)
